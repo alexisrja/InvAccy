@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Accy Flor — Inventario de Rosas</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" href="img/favicon.png" />
+  <link rel="apple-touch-icon" href="img/favicon.png" />
+</head>
+<body>
+  <div class="login-gate active" id="login-gate">
+    <div class="login-card">
+      <div class="login-brand">
+        <h1>Accy Flor</h1>
+        <p>Acceso al sistema de inventario</p>
+      </div>
+      <form onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label for="login-password">Contraseña</label>
+          <input id="login-password" type="password" placeholder="Ingresa la contraseña" required autocomplete="current-password" />
+        </div>
+        <p class="login-error" id="login-error"></p>
+        <button class="btn btn-primary login-btn" type="submit">
+          <i class="bi bi-shield-lock"></i> Entrar
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="app-container">
+
+    <!-- ========== SIDEBAR ========== -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-brand">
+       
+          <div class="brand-text">
+            <h2>Accy Flor</h2>
+            <span class="user-label"><i class="bi bi-person-fill"></i> Admin</span>
+          </div>
+        </div>
+        <button class="sidebar-toggle" onclick="toggleSidebar()" title="Menú">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect y="2" width="18" height="2.2" rx="1" fill="white"/>
+            <rect y="8" width="18" height="2.2" rx="1" fill="white"/>
+            <rect y="14" width="18" height="2.2" rx="1" fill="white"/>
+          </svg>
+        </button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Principal</div>
+        <a class="nav-item active" data-section="inicio" onclick="navigateTo('inicio')">
+          <i class="bi bi-house-door"></i><span>Inicio</span>
+        </a>
+        <a class="nav-item" data-section="nueva-venta" onclick="navigateTo('nueva-venta')">
+          <i class="bi bi-cart-plus"></i><span>Nueva Venta</span>
+        </a>
+        <a class="nav-item" data-section="dashboard" onclick="navigateTo('dashboard')">
+          <i class="bi bi-bar-chart-line"></i><span>Dashboard</span>
+        </a>
+
+        <div class="nav-section-title">Gestión</div>
+        <a class="nav-item" data-section="catalogo" onclick="navigateTo('catalogo')">
+          <i class="bi bi-flower1"></i><span>Catálogo</span>
+        </a>
+        <a class="nav-item" data-section="inventario" onclick="navigateTo('inventario')">
+          <i class="bi bi-box-seam"></i><span>Inventario</span>
+        </a>
+        <a class="nav-item" data-section="clientes" onclick="navigateTo('clientes')">
+          <i class="bi bi-people"></i><span>Clientes</span>
+        </a>
+        <a class="nav-item" data-section="proveedores" onclick="navigateTo('proveedores')">
+          <i class="bi bi-truck"></i><span>Proveedores</span>
+        </a>
+        <a class="nav-item" data-section="historial" onclick="navigateTo('historial')">
+          <i class="bi bi-clock-history"></i><span>Historial</span>
+        </a>
+
+        <div class="nav-section-title">Herramientas</div>
+        <a class="nav-item" data-section="ramos" onclick="navigateTo('ramos')">
+          <i class="bi bi-flower2"></i><span>Ramos</span>
+        </a>
+        <a class="nav-item" data-section="etiquetas" onclick="navigateTo('etiquetas')">
+          <i class="bi bi-tags"></i><span>Etiquetas</span>
+        </a>
+        <a class="nav-item" data-section="config" onclick="navigateTo('config')">
+          <i class="bi bi-gear"></i><span>Configuración</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <a class="nav-item logout" onclick="logoutSystem()">
+          <i class="bi bi-box-arrow-left"></i><span>Salir</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="main-content">
+      <!-- Top Header -->
+      <header class="top-header">
+        <div class="page-title">
+          <i class="bi bi-house-door-fill"></i>
+          <h1>Panel de Control</h1>
+        </div>
+        <div class="header-actions">
+          <div class="header-search">
+            <i class="bi bi-search"></i>
+            <input type="text" placeholder="Buscar rosas, clientes..." id="global-search" oninput="globalSearch(this.value)" />
+            <div class="search-results" id="search-results"></div>
+          </div>
+          <div style="position:relative;">
+            <button class="header-btn" title="Notificaciones" onclick="toggleNotificaciones()">
+              <i class="bi bi-bell"></i>
+              <span class="notif-dot" id="notif-dot"></span>
+            </button>
+            <div class="notif-panel" id="notif-panel">
+              <div class="notif-panel-header">
+                <h4>Notificaciones</h4>
+                <button class="btn btn-outline" style="font-size:11px;padding:4px 10px;" onclick="markAllRead()">Marcar leídas</button>
+              </div>
+              <div class="notif-list" id="notif-list"></div>
+              <div class="notif-panel-footer">
+                <small id="notif-count">0 alertas</small>
+              </div>
+            </div>
+          </div>
+          <div class="user-avatar">AF</div>
+        </div>
+      </header>
+
+      <!-- ========== PAGE: INICIO ========== -->
+      <div class="page-section active" id="section-inicio">
+        <div class="page-content">
+          <!-- Stats Bar -->
+          <div class="stats-bar">
+            <div class="stat-card">
+              <div class="stat-icon roses"><i class="bi bi-flower1"></i></div>
+              <div class="stat-info">
+                <h3 id="stat-stock">0</h3>
+                <p>Tallos en Stock</p>
+                <span class="stat-change up">↑ Actualizado hoy</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon stock"><i class="bi bi-collection"></i></div>
+              <div class="stat-info">
+                <h3 id="stat-variedades">0</h3>
+                <p>Variedades</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon sales"><i class="bi bi-cash-stack"></i></div>
+              <div class="stat-info">
+                <h3 id="stat-ventas-hoy">$0</h3>
+                <p>Ventas Hoy</p>
+                <span class="stat-change up">↑ 12.5%</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon clients"><i class="bi bi-people-fill"></i></div>
+              <div class="stat-info">
+                <h3 id="stat-clientes">0</h3>
+                <p>Clientes Activos</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dashboard Grid -->
+          <div class="dashboard-grid">
+            <!-- Card Featured: Nueva Venta -->
+            <div class="card card-featured" onclick="navigateTo('nueva-venta')">
+              <div>
+                <div class="card-icon"><i class="bi bi-cart-plus-fill"></i></div>
+                <div class="card-title">Nueva Venta</div>
+                <div class="card-desc">Registra ventas de rosas y arreglos.</div>
+              </div>
+              <span class="shortcut-badge">F2 Rápido</span>
+            </div>
+
+            <!-- Clientes -->
+            <div class="card" onclick="navigateTo('clientes')">
+              <div class="card-icon"><i class="bi bi-people-fill"></i></div>
+              <div class="card-title">Clientes</div>
+              <div class="card-desc">Base de datos y perfiles.</div>
+            </div>
+
+            <!-- Catálogo -->
+            <div class="card" onclick="navigateTo('catalogo')">
+              <div class="card-icon"><i class="bi bi-flower1"></i></div>
+              <div class="card-title">Catálogo de Rosas</div>
+              <div class="card-desc">Gestión completa de variedades y precios.</div>
+            </div>
+
+            <!-- Historial -->
+            <div class="card" onclick="navigateTo('historial')">
+              <div class="card-icon"><i class="bi bi-clock-history"></i></div>
+              <div class="card-title">Historial</div>
+              <div class="card-desc">Ventas emitidas.</div>
+            </div>
+
+            <!-- Dashboard -->
+            <div class="card" onclick="navigateTo('dashboard')">
+              <div class="card-icon"><i class="bi bi-bar-chart-line-fill"></i></div>
+              <div class="card-title">Dashboard de Ventas</div>
+              <div class="card-desc">Analiza tus ingresos y estadísticas en tiempo real.</div>
+            </div>
+
+            <!-- Inventario -->
+            <div class="card" onclick="navigateTo('inventario')">
+              <div class="card-icon"><i class="bi bi-box-seam-fill"></i></div>
+              <div class="card-title">Inventario</div>
+              <div class="card-desc">Stock actual de tallos.</div>
+            </div>
+
+            <!-- Ramos -->
+            <div class="card" onclick="navigateTo('ramos')">
+              <div class="card-icon"><i class="bi bi-flower2"></i></div>
+              <div class="card-title">Ramos y Arreglos</div>
+              <div class="card-desc">Combinaciones y bouquets.</div>
+            </div>
+
+            <!-- Etiquetas -->
+            <div class="card" onclick="navigateTo('etiquetas')">
+              <div class="card-icon"><i class="bi bi-tags-fill"></i></div>
+              <div class="card-title">Etiquetas</div>
+              <div class="card-desc">Códigos de barras y rotulado.</div>
+            </div>
+          </div>
+
+          <!-- Alertas de stock bajo -->
+          <div style="margin-top: 28px;">
+            <h3 style="font-size:16px; font-weight:700; margin-bottom:12px;"><i class="bi bi-exclamation-triangle" style="color:#ff9800;"></i> Alertas de Stock</h3>
+            <div id="low-stock-alerts"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== PAGE: NUEVA VENTA ========== -->
+      <div class="page-section" id="section-nueva-venta">
+        <div class="page-content">
+          <div class="data-table-container" style="max-width:800px;">
+            <div class="table-header">
+              <h3>🌹 Registrar Venta</h3>
+            </div>
+            <div style="padding:24px;">
+              <div class="form-group">
+                <label>Cliente</label>
+                <select id="venta-cliente">
+                  <option value="">Seleccionar cliente...</option>
+                </select>
+              </div>
+
+              <label style="font-size:13px; font-weight:600; color:var(--text-medium); margin-bottom:10px; display:block;">Productos</label>
+              <div id="venta-items"></div>
+              <button class="btn btn-outline" onclick="addVentaItem()" style="margin-top:8px;">
+                <i class="bi bi-plus-lg"></i> Agregar Producto
+              </button>
+
+              <div class="sale-total">
+                Total: <span id="venta-total">$0.00</span>
+              </div>
+
+              <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button class="btn btn-outline" onclick="navigateTo('inicio')">Cancelar</button>
+                <button class="btn btn-primary" onclick="guardarVenta()" style="font-size:15px; padding:12px 28px;">
+                  <i class="bi bi-check-lg"></i> Confirmar Venta
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== PAGE: CATÁLOGO ========== -->
+      <div class="page-section" id="section-catalogo">
+        <div class="page-content">
+          <div class="section-header">
+            <h2>Catálogo de Rosas</h2>
+            <button class="btn btn-primary" onclick="openAddRosaModal()">
+              <i class="bi bi-plus-lg"></i> Agregar Rosa
+            </button>
+          </div>
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Color</th>
+                  <th>Variedad</th>
+                  <th>Largo Tallo</th>
+                  <th>Precio/Tallo</th>
+                  <th>Stock</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="catalogo-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== PAGE: INVENTARIO ========== -->
+      <div class="page-section" id="section-inventario">
+        <div class="page-content">
+          <div class="section-header">
+            <h2>Control de Inventario</h2>
+            <button class="btn btn-primary" onclick="openAddRosaModal()">
+              <i class="bi bi-plus-lg"></i> Nueva Entrada
+            </button>
+          </div>
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Rosa</th>
+                  <th>Color</th>
+                  <th>Stock Actual</th>
+                  <th>Stock Mínimo</th>
+                  <th>Estado</th>
+                  <th>Proveedor</th>
+                  <th>Ajustar</th>
+                </tr>
+              </thead>
+              <tbody id="inventario-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== PAGE: CLIENTES ========== -->
+      <div class="page-section" id="section-clientes">
+        <div class="page-content">
+          <div class="section-header">
+            <h2>Gestión de Clientes</h2>
+            <button class="btn btn-primary" onclick="openAddClienteModal()">
+              <i class="bi bi-plus-lg"></i> Agregar Cliente
+            </button>
+          </div>
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Empresa / Nombre</th>
+                  <th>Contacto</th>
+                  <th>Teléfono</th>
+                  <th>Email</th>
+                  <th>Tipo</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="clientes-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== PAGE: PROVEEDORES ========== -->
+      <div class="page-section" id="section-proveedores">
+        <div class="page-content">
+          <div class="section-header">
+            <h2>Proveedores</h2>
+            <button class="btn btn-primary" onclick="openAddProveedorModal()">
+              <i class="bi bi-plus-lg"></i> Agregar Proveedor
+            </button>
+          </div>
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Contacto</th>
+                  <th>Teléfono</th>
+                  <th>Ubicación</th>
+                  <th>Variedades</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="proveedores-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== PAGE: HISTORIAL ========== -->
+      <div class="page-section" id="section-historial">
+        <div class="page-content">
+          <div class="section-header">
+            <h2>Historial de Ventas</h2>
+            <button class="btn btn-outline" onclick="exportHistorial()"><i class="bi bi-download"></i> Exportar</button>
+          </div>
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th># Venta</th>
+                  <th>Fecha</th>
+                  <th>Cliente</th>
+                  <th>Productos</th>
+                  <th>Total</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="historial-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== PAGE: DASHBOARD ========== -->
+      <div class="page-section" id="section-dashboard">
+        <div class="page-content" id="dashboard-content">
+        </div>
+      </div>
+
+      <!-- ========== PAGE: RAMOS ========== -->
+      <div class="page-section" id="section-ramos">
+        <div class="page-content">
+          <div class="section-header">
+            <h2>Ramos y Arreglos</h2>
+            <button class="btn btn-primary" onclick="openAddRamoModal()"><i class="bi bi-plus-lg"></i> Nuevo Arreglo</button>
+          </div>
+
+          <!-- Lista de Ramos -->
+          <div id="ramos-grid" class="ramos-grid"></div>
+        </div>
+      </div>
+
+      <!-- ========== PAGE: ETIQUETAS ========== -->
+      <div class="page-section" id="section-etiquetas">
+        <div class="page-content">
+          <div class="section-header">
+            <h2>Generador de Etiquetas</h2>
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-outline" onclick="selectAllEtiquetas()"><i class="bi bi-check2-all"></i> Seleccionar Todas</button>
+              <button class="btn btn-primary" onclick="imprimirEtiquetas()"><i class="bi bi-printer"></i> Imprimir Seleccionadas</button>
+            </div>
+          </div>
+
+          <!-- Configuración de etiqueta -->
+          <div class="data-table-container" style="margin-bottom:20px;">
+            <div class="table-header">
+              <h3><i class="bi bi-gear"></i> Configuración de Etiqueta</h3>
+              <button class="btn btn-outline" onclick="toggleEtiquetaConfig()" id="btn-toggle-config"><i class="bi bi-chevron-down"></i></button>
+            </div>
+            <div id="etiqueta-config" style="padding:20px; display:none;">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Tamaño de Etiqueta</label>
+                  <select id="etiqueta-size" onchange="previewEtiquetas()">
+                    <option value="small">Pequeña (5 × 3 cm)</option>
+                    <option value="medium" selected>Mediana (7 × 4 cm)</option>
+                    <option value="large">Grande (10 × 6 cm)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Mostrar en Etiqueta</label>
+                  <div style="display:flex; flex-direction:column; gap:6px; margin-top:4px;">
+                    <label style="font-weight:400; display:flex; align-items:center; gap:6px; cursor:pointer;">
+                      <input type="checkbox" id="show-nombre" checked onchange="previewEtiquetas()" /> Nombre
+                    </label>
+                    <label style="font-weight:400; display:flex; align-items:center; gap:6px; cursor:pointer;">
+                      <input type="checkbox" id="show-color" checked onchange="previewEtiquetas()" /> Color
+                    </label>
+                    <label style="font-weight:400; display:flex; align-items:center; gap:6px; cursor:pointer;">
+                      <input type="checkbox" id="show-precio" checked onchange="previewEtiquetas()" /> Precio
+                    </label>
+                    <label style="font-weight:400; display:flex; align-items:center; gap:6px; cursor:pointer;">
+                      <input type="checkbox" id="show-codigo" checked onchange="previewEtiquetas()" /> Código de Barras
+                    </label>
+                    <label style="font-weight:400; display:flex; align-items:center; gap:6px; cursor:pointer;">
+                      <input type="checkbox" id="show-variedad" onchange="previewEtiquetas()" /> Variedad
+                    </label>
+                    <label style="font-weight:400; display:flex; align-items:center; gap:6px; cursor:pointer;">
+                      <input type="checkbox" id="show-tallo" onchange="previewEtiquetas()" /> Largo de Tallo
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Selección de productos -->
+          <div class="data-table-container" style="margin-bottom:20px;">
+            <div class="table-header">
+              <h3><i class="bi bi-flower1"></i> Seleccionar Productos</h3>
+              <div class="form-group" style="margin:0; width:200px;">
+                <input type="number" id="etiqueta-cantidad" min="1" value="1" placeholder="Cantidad por rosa" style="padding:6px 10px; font-size:13px;" />
+              </div>
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width:40px;"><input type="checkbox" id="check-all-etiquetas" onchange="toggleAllEtiquetas(this.checked)" /></th>
+                  <th>Rosa</th>
+                  <th>Color</th>
+                  <th>Precio</th>
+                  <th>Código</th>
+                  <th>Cantidad</th>
+                </tr>
+              </thead>
+              <tbody id="etiquetas-tbody"></tbody>
+            </table>
+          </div>
+
+          <!-- Vista previa -->
+          <div class="data-table-container">
+            <div class="table-header">
+              <h3><i class="bi bi-eye"></i> Vista Previa</h3>
+              <span id="etiquetas-count" style="font-size:13px; color:var(--text-light);">0 etiquetas</span>
+            </div>
+            <div id="etiquetas-preview" class="etiquetas-preview-grid" style="padding:20px;">
+              <div class="empty-state">
+                <i class="bi bi-tags"></i>
+                <h3>Selecciona productos</h3>
+                <p>Marca las rosas de la tabla para generar etiquetas.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== PAGE: CONFIG ========== -->
+      <div class="page-section" id="section-config">
+        <div class="page-content">
+          <div class="section-header">
+            <h2>Configuración</h2>
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; max-width:900px;">
+            <!-- General -->
+            <div class="data-table-container" style="padding:24px;">
+              <h3 style="font-size:15px; font-weight:700; margin-bottom:16px;"><i class="bi bi-building"></i> Empresa</h3>
+              <div class="form-group">
+                <label>Nombre de la Empresa</label>
+                <input type="text" id="config-empresa" value="Accy Flor" />
+              </div>
+              <div class="form-group">
+                <label>Teléfono</label>
+                <input type="tel" id="config-telefono" value="555-9000" />
+              </div>
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="config-email" value="contacto@accyflor.com" />
+              </div>
+              <div class="form-group">
+                <label>Dirección</label>
+                <input type="text" id="config-direccion" value="" placeholder="Dirección de la empresa" />
+              </div>
+            </div>
+            <!-- Inventario -->
+            <div class="data-table-container" style="padding:24px;">
+              <h3 style="font-size:15px; font-weight:700; margin-bottom:16px;"><i class="bi bi-box-seam"></i> Inventario</h3>
+              <div class="form-group">
+                <label>Moneda</label>
+                <select id="config-moneda">
+                  <option value="USD">USD ($)</option>
+                  <option value="MXN">MXN ($)</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="COP">COP ($)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Alerta cuando stock esté al (%) del mínimo</label>
+                <input type="number" id="config-alerta-pct" value="100" min="50" max="200" />
+              </div>
+              <div class="form-group">
+                <label>IVA / Impuesto (%)</label>
+                <input type="number" id="config-iva" value="16" min="0" max="50" step="0.1" />
+              </div>
+            </div>
+            <!-- Apariencia -->
+            <div class="data-table-container" style="padding:24px;">
+              <h3 style="font-size:15px; font-weight:700; margin-bottom:16px;"><i class="bi bi-palette"></i> Apariencia</h3>
+              <div class="form-group">
+                <label>Tema</label>
+                <select id="config-tema" onchange="changeTheme(this.value)">
+                  <option value="rosa">Rosa (Por defecto)</option>
+                  <option value="verde">Verde</option>
+                  <option value="azul">Azul</option>
+                  <option value="oscuro">Oscuro</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Sidebar</label>
+                <select id="config-sidebar" onchange="document.querySelector('.sidebar').classList.toggle('collapsed', this.value==='collapsed')">
+                  <option value="expanded">Expandido</option>
+                  <option value="collapsed">Colapsado</option>
+                </select>
+              </div>
+            </div>
+            <!-- Datos -->
+            <div class="data-table-container" style="padding:24px;">
+              <h3 style="font-size:15px; font-weight:700; margin-bottom:16px;"><i class="bi bi-database"></i> Datos</h3>
+              <div class="form-group">
+                <label>Exportar datos</label>
+                <button class="btn btn-outline" onclick="exportAllData()" style="width:100%;"><i class="bi bi-download"></i> Exportar todo (JSON)</button>
+              </div>
+              <div class="form-group">
+                <label>Importar datos</label>
+                <input type="file" id="import-file" accept=".json" onchange="importData(this)" style="font-size:13px;" />
+              </div>
+              <div class="form-group" style="margin-top:20px;">
+                <button class="btn btn-danger" onclick="resetData()" style="width:100%;"><i class="bi bi-trash"></i> Restablecer Datos</button>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:20px; max-width:900px;">
+            <button class="btn btn-primary" onclick="saveConfig()" style="font-size:15px; padding:12px 32px;">
+              <i class="bi bi-check-lg"></i> Guardar Configuración
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ========== MODALS ========== -->
+
+  <!-- Modal: Rosa -->
+  <div class="modal-overlay" id="rosa-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="rosa-modal-title">Agregar Nueva Rosa</h3>
+        <button class="modal-close" onclick="closeModal('rosa-modal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <form class="modal-body" id="rosa-form" onsubmit="event.preventDefault(); saveRosa();">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nombre *</label>
+            <input type="text" id="rosa-nombre" placeholder="Ej: Freedom" required />
+          </div>
+          <div class="form-group">
+            <label>Color *</label>
+            <select id="rosa-color" required>
+              <option value="">Seleccionar...</option>
+              <option value="rojo">Rojo</option>
+              <option value="blanco">Blanco</option>
+              <option value="rosa">Rosa</option>
+              <option value="amarillo">Amarillo</option>
+              <option value="naranja">Naranja</option>
+              <option value="lavanda">Lavanda</option>
+              <option value="bicolor">Bicolor</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Variedad</label>
+            <input type="text" id="rosa-variedad" placeholder="Ej: Híbrida de Té" />
+          </div>
+          <div class="form-group">
+            <label>Largo de Tallo (cm)</label>
+            <input type="number" id="rosa-tallo" placeholder="60" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Precio por Tallo ($)</label>
+            <input type="number" id="rosa-precio" step="0.01" placeholder="2.50" />
+          </div>
+          <div class="form-group">
+            <label>Stock Inicial (tallos)</label>
+            <input type="number" id="rosa-stock" placeholder="0" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Stock Mínimo</label>
+            <input type="number" id="rosa-minstock" placeholder="50" />
+          </div>
+          <div class="form-group">
+            <label>Proveedor</label>
+            <select id="rosa-proveedor">
+              <option value="">Seleccionar...</option>
+            </select>
+          </div>
+        </div>
+      </form>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('rosa-modal')">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveRosa()"><i class="bi bi-check-lg"></i> Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Cliente -->
+  <div class="modal-overlay" id="cliente-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="cliente-modal-title">Agregar Cliente</h3>
+        <button class="modal-close" onclick="closeModal('cliente-modal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <form class="modal-body" id="cliente-form" onsubmit="event.preventDefault(); saveCliente();">
+        <div class="form-group">
+          <label>Empresa / Nombre *</label>
+          <input type="text" id="cliente-nombre" placeholder="Ej: Florería La Bella" required />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Persona de Contacto</label>
+            <input type="text" id="cliente-contacto" placeholder="Nombre completo" />
+          </div>
+          <div class="form-group">
+            <label>Teléfono</label>
+            <input type="tel" id="cliente-telefono" placeholder="555-0101" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="cliente-email" placeholder="correo@email.com" />
+          </div>
+          <div class="form-group">
+            <label>Tipo</label>
+            <select id="cliente-tipo">
+              <option value="Mayorista">Mayorista</option>
+              <option value="Minorista">Minorista</option>
+              <option value="Eventos">Eventos</option>
+              <option value="Decoración">Decoración</option>
+            </select>
+          </div>
+        </div>
+      </form>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('cliente-modal')">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveCliente()"><i class="bi bi-check-lg"></i> Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Proveedor -->
+  <div class="modal-overlay" id="proveedor-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="proveedor-modal-title">Agregar Proveedor</h3>
+        <button class="modal-close" onclick="closeModal('proveedor-modal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <form class="modal-body" id="proveedor-form" onsubmit="event.preventDefault(); saveProveedor();">
+        <div class="form-group">
+          <label>Nombre de la Finca / Empresa *</label>
+          <input type="text" id="proveedor-nombre" placeholder="Ej: Finca El Rosal" required />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Persona de Contacto</label>
+            <input type="text" id="proveedor-contacto" placeholder="Nombre" />
+          </div>
+          <div class="form-group">
+            <label>Teléfono</label>
+            <input type="tel" id="proveedor-telefono" placeholder="555-1001" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Ubicación</label>
+          <input type="text" id="proveedor-ubicacion" placeholder="Ciudad / Región" />
+        </div>
+      </form>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('proveedor-modal')">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveProveedor()"><i class="bi bi-check-lg"></i> Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Ramo -->
+  <div class="modal-overlay" id="ramo-modal">
+    <div class="modal" style="max-width:650px;">
+      <div class="modal-header">
+        <h3 id="ramo-modal-title">Nuevo Arreglo Floral</h3>
+        <button class="modal-close" onclick="closeModal('ramo-modal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <form class="modal-body" id="ramo-form" onsubmit="event.preventDefault(); saveRamo();">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nombre del Arreglo *</label>
+            <input type="text" id="ramo-nombre" placeholder="Ej: Bouquet Romántico" required />
+          </div>
+          <div class="form-group">
+            <label>Tipo</label>
+            <select id="ramo-tipo">
+              <option value="Bouquet">Bouquet</option>
+              <option value="Centro de Mesa">Centro de Mesa</option>
+              <option value="Arreglo">Arreglo</option>
+              <option value="Corona">Corona</option>
+              <option value="Caja">Caja de Rosas</option>
+              <option value="Personalizado">Personalizado</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Descripción</label>
+          <textarea id="ramo-desc" rows="2" placeholder="Descripción del arreglo..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Composición (Rosas)</label>
+          <div id="ramo-composicion"></div>
+          <button type="button" class="btn btn-outline" onclick="addRamoRosa()" style="margin-top:8px; font-size:12px;">
+            <i class="bi bi-plus-lg"></i> Agregar Rosa
+          </button>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Precio de Venta ($)</label>
+            <input type="number" id="ramo-precio" step="0.01" placeholder="0.00" />
+          </div>
+          <div class="form-group">
+            <label>Costo Estimado</label>
+            <input type="text" id="ramo-costo" readonly style="background:var(--bg-main);" value="$0.00" />
+          </div>
+        </div>
+      </form>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('ramo-modal')">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveRamo()"><i class="bi bi-check-lg"></i> Guardar Arreglo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Load Proveedores into selects & Clientes into venta -->
+  <script src="js/app.js"></script>
+  <script>
+    // Populate dynamic selects
+    function populateSelects() {
+      // Proveedores in Rosa modal
+      const provSelect = document.getElementById('rosa-proveedor');
+      const existingOptions = provSelect.querySelector('option[value=""]');
+      provSelect.innerHTML = '<option value="">Seleccionar...</option>';
+      appData.proveedores.forEach(p => {
+        provSelect.innerHTML += `<option value="${p.nombre}">${p.nombre}</option>`;
+      });
+      // Clientes in Venta
+      const clientSelect = document.getElementById('venta-cliente');
+      clientSelect.innerHTML = '<option value="">Seleccionar cliente...</option>';
+      appData.clientes.forEach(c => {
+        clientSelect.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
+      });
+    }
+
+    // Override navigateTo to also populate selects
+    const _origNav = navigateTo;
+    navigateTo = function(section) {
+      _origNav(section);
+      populateSelects();
+    };
+
+    // Initial render
+    navigateTo('inicio');
+  </script>
+</body>
+</html>
