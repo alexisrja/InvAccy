@@ -170,7 +170,7 @@ function renderInicio() {
       <div class="toast warning" style="animation:none; position:relative; margin-bottom:8px;">
         <i class="bi bi-exclamation-triangle-fill" style="color:#ff9800;"></i>
         <div>
-          <strong>${r.nombre}</strong> (${capitalizeFirst(r.color)}) — Stock: <strong>${r.stock}</strong> tallos (Mín: ${r.minStock})
+          <strong>${r.nombre}</strong> (${capitalizeFirst(r.color)}) — Stock: <strong>${r.stock}</strong> paquetes (Mín: ${r.minStock})
         </div>
       </div>
     `).join('');
@@ -208,8 +208,8 @@ function renderInventario() {
       <tr>
         <td><span class="color-dot ${r.color}"></span>${r.nombre}</td>
         <td>${capitalizeFirst(r.color)}</td>
-        <td><strong>${r.stock}</strong> tallos</td>
-        <td>${r.minStock} tallos</td>
+        <td><strong>${r.stock}</strong> paquetes</td>
+        <td>${r.minStock} paquetes</td>
         <td><span class="stock-badge ${estadoClass}">${estado}</span></td>
         <td>${r.proveedor}</td>
         <td>
@@ -292,8 +292,16 @@ function renderVentaForm() {
       <div class="form-group" style="margin:0;">
         <input type="number" placeholder="Cantidad" min="1" value="${item.cantidad || ''}" onchange="updateVentaItem(${idx}, 'cantidad', this.value)" />
       </div>
-      <div class="form-group" style="margin:0;">
-        <input type="number" placeholder="Precio" step="0.01" value="${item.precio || ''}" onchange="updateVentaItem(${idx}, 'precio', this.value)" />
+      <div class="form-group" style="margin:0; position:relative;">
+        <input type="number" placeholder="Precio" step="0.01" value="${item.precio || ''}" 
+          ${!item.precioEditado ? 'readonly style="background:var(--accent-light); cursor:default;"' : ''} 
+          id="precio-input-${idx}"
+          onchange="updateVentaItem(${idx}, 'precio', this.value)" />
+        <button type="button" class="btn btn-outline" onclick="habilitarEditarPrecio(${idx})" 
+          style="position:absolute; right:2px; top:50%; transform:translateY(-50%); padding:4px 6px; font-size:11px; border:none; ${item.precioEditado ? 'display:none;' : ''}" 
+          title="Modificar precio">
+          <i class="bi bi-pencil"></i>
+        </button>
       </div>
       <button class="btn btn-outline" onclick="removeVentaItem(${idx})" style="color:var(--danger);height:40px;"><i class="bi bi-x-lg"></i></button>
     </div>
@@ -304,7 +312,7 @@ function renderVentaForm() {
 }
 
 function addVentaItem() {
-  ventaItems.push({ rosaId: '', cantidad: '', precio: '' });
+  ventaItems.push({ rosaId: '', cantidad: '', precio: '', precioEditado: false });
   renderVentaForm();
 }
 
@@ -315,14 +323,29 @@ function removeVentaItem(idx) {
 
 function updateVentaItem(idx, field, value) {
   ventaItems[idx][field] = value;
-  // Auto-fill price when rosa is selected
+  // Auto-fill price when rosa is selected (only if user hasn't manually edited)
   if (field === 'rosaId' && value) {
     const rosa = appData.rosas.find(r => r.id == value);
     if (rosa) {
       ventaItems[idx].precio = rosa.precioTallo;
+      ventaItems[idx].precioEditado = false;
     }
   }
+  // Mark price as manually edited
+  if (field === 'precio') {
+    ventaItems[idx].precioEditado = true;
+  }
   renderVentaForm();
+}
+
+function habilitarEditarPrecio(idx) {
+  ventaItems[idx].precioEditado = true;
+  renderVentaForm();
+  const input = document.getElementById('precio-input-' + idx);
+  if (input) {
+    input.focus();
+    input.select();
+  }
 }
 
 function guardarVenta() {
@@ -351,16 +374,23 @@ function guardarVenta() {
     if (rosa) rosa.stock -= parseInt(i.cantidad);
   });
 
+  const ventaId = appData.nextVentaId++;
+  const fechaHoy = new Date().toISOString().slice(0, 10);
+
   appData.ventas.unshift({
-    id: appData.nextVentaId++,
-    fecha: '2026-02-28',
+    id: ventaId,
+    fecha: fechaHoy,
     cliente: clienteNombre,
     items: items,
     total: total,
     estado: 'Completada'
   });
 
-  showToast(`Venta #${appData.nextVentaId - 1} registrada — $${total.toFixed(2)}`, 'success');
+  showToast(`Venta #${ventaId} registrada — $${total.toFixed(2)}`, 'success');
+
+  // Generar factura
+  generarFactura(ventaId, fechaHoy, clienteNombre, items, total);
+
   ventaItems = [];
   renderVentaForm();
   clienteSelect.value = '';
@@ -368,25 +398,302 @@ function guardarVenta() {
   refreshNotifDot();
 }
 
+// ---- Generar Factura ----
+function generarFactura(ventaId, fecha, cliente, items, total) {
+  const config = appData.config;
+  const iva = config.iva || 0;
+  const subtotal = total;
+  const montoIva = subtotal * (iva / 100);
+  const totalConIva = subtotal + montoIva;
+
+  // Convertir favicon a base64 para la ventana de impresión
+  const canvas = document.createElement('canvas');
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = function () {
+    canvas.width = img.width;
+    canvas.height = img.height;
+    canvas.getContext('2d').drawImage(img, 0, 0);
+    let faviconBase64 = '';
+    try { faviconBase64 = canvas.toDataURL('image/png'); } catch (e) { faviconBase64 = ''; }
+    abrirVentanaFactura(ventaId, fecha, cliente, items, subtotal, iva, montoIva, totalConIva, config, faviconBase64);
+  };
+  img.onerror = function () {
+    abrirVentanaFactura(ventaId, fecha, cliente, items, subtotal, iva, montoIva, totalConIva, config, '');
+  };
+  img.src = 'img/favicon.png';
+}
+
+function abrirVentanaFactura(ventaId, fecha, cliente, items, subtotal, iva, montoIva, totalConIva, config, faviconBase64) {
+  const printWin = window.open('', '_blank', 'width=820,height=900');
+  printWin.document.write(`<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Factura #${ventaId} — ${config.empresa}</title>
+  <style>
+    @page { size: letter; margin: 15mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', 'Inter', -apple-system, sans-serif;
+      color: #2d1f27;
+      background: #fff;
+      position: relative;
+      padding: 40px 50px;
+      min-height: 100vh;
+    }
+    /* Marca de agua */
+    .watermark {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0.06;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .watermark img {
+      width: 420px;
+      height: 420px;
+      object-fit: contain;
+    }
+    .factura-content { position: relative; z-index: 1; }
+
+    /* Header */
+    .factura-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 3px solid #6b3a5d;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+    .factura-brand { display: flex; align-items: center; gap: 14px; }
+    .factura-brand img { width: 56px; height: 56px; border-radius: 12px; }
+    .factura-brand h1 { font-size: 28px; font-weight: 800; color: #6b3a5d; }
+    .factura-brand p { font-size: 12px; color: #6b5460; margin-top: 2px; }
+    .factura-id { text-align: right; }
+    .factura-id h2 { font-size: 22px; font-weight: 800; color: #6b3a5d; letter-spacing: 1px; }
+    .factura-id p { font-size: 13px; color: #6b5460; margin-top: 4px; }
+
+    /* Info boxes */
+    .factura-info-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+    .factura-info-box {
+      flex: 1;
+      background: #faf5f7;
+      border: 1px solid #e8d0dc;
+      border-radius: 10px;
+      padding: 16px 20px;
+    }
+    .factura-info-box h4 {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #6b3a5d;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    .factura-info-box p { font-size: 13px; color: #2d1f27; line-height: 1.6; }
+    .factura-info-box p strong { font-weight: 700; }
+
+    /* Tabla */
+    .factura-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+    .factura-table thead th {
+      background: #6b3a5d;
+      color: #fff;
+      padding: 10px 14px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 700;
+      text-align: left;
+    }
+    .factura-table thead th:first-child { border-radius: 8px 0 0 0; }
+    .factura-table thead th:last-child { border-radius: 0 8px 0 0; text-align: right; }
+    .factura-table tbody td {
+      padding: 10px 14px;
+      font-size: 13px;
+      border-bottom: 1px solid #e8d0dc;
+    }
+    .factura-table tbody tr:nth-child(even) { background: #faf5f7; }
+    .factura-table tbody td:last-child { text-align: right; font-weight: 600; }
+    .factura-table tbody td.qty { text-align: center; }
+    .factura-table tbody td.price { text-align: right; }
+
+    /* Totales */
+    .factura-totals {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 40px;
+    }
+    .factura-totals-box {
+      width: 280px;
+      border: 1px solid #e8d0dc;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 18px;
+      font-size: 13px;
+    }
+    .total-row.subtotal { background: #faf5f7; }
+    .total-row.iva { background: #faf5f7; border-top: 1px solid #e8d0dc; }
+    .total-row.grand {
+      background: #6b3a5d;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 800;
+      padding: 14px 18px;
+    }
+
+    /* Footer */
+    .factura-footer {
+      border-top: 2px solid #e8d0dc;
+      padding-top: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #9a8590;
+    }
+    .factura-footer p { margin-bottom: 4px; }
+    .factura-footer strong { color: #6b3a5d; }
+
+    /* Print button */
+    .no-print { text-align: center; margin-top: 30px; }
+    .no-print button {
+      padding: 12px 32px; font-size: 15px; font-weight: 700;
+      border: none; border-radius: 10px; cursor: pointer;
+      color: #fff; background: #6b3a5d;
+    }
+    .no-print button:hover { background: #4e2a44; }
+    .no-print .btn-close-factura {
+      background: transparent; color: #6b5460; border: 1px solid #e8d0dc;
+      margin-left: 10px;
+    }
+    @media print {
+      .no-print { display: none !important; }
+      body { padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  ${faviconBase64 ? `<div class="watermark"><img src="${faviconBase64}" alt="watermark" /></div>` : ''}
+  <div class="factura-content">
+    <!-- Header -->
+    <div class="factura-header">
+      <div class="factura-brand">
+        ${faviconBase64 ? `<img src="${faviconBase64}" alt="logo" />` : ''}
+        <div>
+          <h1>${config.empresa}</h1>
+          <p>${config.telefono ? config.telefono : ''} ${config.email ? '• ' + config.email : ''}</p>
+          ${config.direccion ? `<p>${config.direccion}</p>` : ''}
+        </div>
+      </div>
+      <div class="factura-id">
+        <h2>FACTURA</h2>
+        <p><strong>#${ventaId}</strong></p>
+        <p>Fecha: <strong>${fecha}</strong></p>
+      </div>
+    </div>
+
+    <!-- Info -->
+    <div class="factura-info-row">
+      <div class="factura-info-box">
+        <h4>Facturado a</h4>
+        <p><strong>${cliente}</strong></p>
+      </div>
+      <div class="factura-info-box">
+        <h4>Detalles</h4>
+        <p>Método: <strong>Pendiente</strong></p>
+        <p>Estado: <strong>Completada</strong></p>
+      </div>
+    </div>
+
+    <!-- Tabla de productos -->
+    <table class="factura-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Producto</th>
+          <th style="text-align:center;">Cantidad</th>
+          <th style="text-align:right;">Precio Unit.</th>
+          <th>Importe</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${items.map((item, idx) => `
+          <tr>
+            <td>${idx + 1}</td>
+            <td>${item.rosa}</td>
+            <td class="qty">${item.cantidad}</td>
+            <td class="price">$${item.precio.toFixed(2)}</td>
+            <td>$${(item.cantidad * item.precio).toFixed(2)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+
+    <!-- Totales -->
+    <div class="factura-totals">
+      <div class="factura-totals-box">
+        <div class="total-row subtotal">
+          <span>Subtotal</span>
+          <span>$${subtotal.toFixed(2)}</span>
+        </div>
+        <div class="total-row iva">
+          <span>IVA (${iva}%)</span>
+          <span>$${montoIva.toFixed(2)}</span>
+        </div>
+        <div class="total-row grand">
+          <span>TOTAL</span>
+          <span>$${totalConIva.toFixed(2)}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="factura-footer">
+      <p><strong>${config.empresa}</strong></p>
+      <p>${config.telefono || ''} ${config.email ? '• ' + config.email : ''}</p>
+      <p style="margin-top:8px;">Gracias por su compra</p>
+    </div>
+
+    <!-- Botones (no se imprimen) -->
+    <div class="no-print">
+      <button onclick="window.print();">🖨️ Imprimir Factura</button>
+      <button class="btn-close-factura" onclick="window.close();">Cerrar</button>
+    </div>
+  </div>
+</body>
+</html>`);
+  printWin.document.close();
+}
+
 // ---- Ajustar Stock ----
 function adjustStock(rosaId, type) {
   const rosa = appData.rosas.find(r => r.id === rosaId);
   if (!rosa) return;
 
-  const cantidad = prompt(`${type === 'add' ? 'Agregar' : 'Retirar'} tallos de "${rosa.nombre}":\nStock actual: ${rosa.stock}\n\nCantidad:`);
+  const cantidad = prompt(`${type === 'add' ? 'Agregar' : 'Retirar'} paquetes de "${rosa.nombre}":\nStock actual: ${rosa.stock}\n\nCantidad:`);
   if (!cantidad || isNaN(cantidad) || parseInt(cantidad) <= 0) return;
 
   const num = parseInt(cantidad);
   if (type === 'add') {
     rosa.stock += num;
-    showToast(`+${num} tallos de ${rosa.nombre} agregados`, 'success');
+    showToast(`+${num} paquetes de ${rosa.nombre} agregados`, 'success');
   } else {
     if (num > rosa.stock) {
       showToast('No hay suficiente stock', 'error');
       return;
     }
     rosa.stock -= num;
-    showToast(`-${num} tallos de ${rosa.nombre} retirados`, 'warning');
+    showToast(`-${num} paquetes de ${rosa.nombre} retirados`, 'warning');
   }
   renderInventario();
   notificacionesRead = false;
@@ -638,7 +945,7 @@ function buildNotificaciones() {
         type: 'stock-alert',
         icon: 'bi-exclamation-triangle-fill',
         title: `⚠️ Stock CRÍTICO: ${r.nombre}`,
-        desc: `Solo quedan ${r.stock} tallos (mín: ${r.minStock}). ¡Reabastecer urgente!`,
+        desc: `Solo quedan ${r.stock} paquetes (mín: ${r.minStock}). ¡Reabastecer urgente!`,
         time: 'Ahora',
         priority: 1
       });
@@ -647,7 +954,7 @@ function buildNotificaciones() {
         type: 'stock-alert',
         icon: 'bi-exclamation-circle-fill',
         title: `Stock bajo: ${r.nombre}`,
-        desc: `${r.stock} tallos en stock (mín: ${r.minStock}). Considerar pedido.`,
+        desc: `${r.stock} paquetes en stock (mín: ${r.minStock}). Considerar pedido.`,
         time: 'Hoy',
         priority: 2
       });
@@ -674,7 +981,7 @@ function buildNotificaciones() {
       type: 'info-alert',
       icon: 'bi-info-circle-fill',
       title: 'Resumen del día',
-      desc: `${totalStock.toLocaleString()} tallos en inventario. ${appData.ventas.filter(v => v.fecha === '2026-02-28').length} ventas hoy.`,
+      desc: `${totalStock.toLocaleString()} paquetes en inventario. ${appData.ventas.filter(v => v.fecha === '2026-02-28').length} ventas hoy.`,
       time: 'Hoy',
       priority: 4
     });
@@ -969,7 +1276,7 @@ function renderRamos() {
         <div class="ramo-card-body">
           <p style="font-size:13px; color:var(--text-light); margin-bottom:8px;">${ramo.desc || 'Sin descripción'}</p>
           <div class="ramo-composicion-list">
-            <strong style="font-size:12px;">Composición (${totalTallos} tallos):</strong>
+            <strong style="font-size:12px;">Composición (${totalTallos} paquetes):</strong>
             <div style="font-size:12px; color:var(--text-medium); margin-top:4px;">${rosasDesc}</div>
           </div>
           <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:12px;">
@@ -1431,7 +1738,7 @@ function renderDashboard() {
         <h3>🌹 Rosas Más Vendidas</h3>
       </div>
       <table class="data-table">
-        <thead><tr><th>Rosa</th><th>Tallos Vendidos</th><th>Ingresos Est.</th><th>Participación</th></tr></thead>
+        <thead><tr><th>Rosa</th><th>Paquetes Vendidos</th><th>Ingresos Est.</th><th>Participación</th></tr></thead>
         <tbody>
           ${sortedRosas.map(([nombre, cantidad]) => {
             const totalTallos = sortedRosas.reduce((s, [, c]) => s + c, 0);
@@ -1440,7 +1747,7 @@ function renderDashboard() {
             const ingresos = rosa ? cantidad * rosa.precioTallo : 0;
             return `<tr>
               <td><strong>${nombre}</strong></td>
-              <td>${cantidad} tallos</td>
+              <td>${cantidad} paquetes</td>
               <td>$${ingresos.toFixed(2)}</td>
               <td>
                 <div style="display:flex;align-items:center;gap:8px;">
