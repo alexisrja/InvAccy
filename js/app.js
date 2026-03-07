@@ -143,12 +143,39 @@ function navigateTo(section) {
   if (section === 'nueva-venta') initNuevaVenta();
   if (section === 'etiquetas') renderEtiquetasTable();
   if (section === 'ramos') renderRamos();
+
+  // Cerrar sidebar en móvil al navegar
+  closeMobileSidebar();
 }
 
-// ---- Toggle Sidebar ----
+// ---- Toggle Sidebar (desktop) ----
 function toggleSidebar() {
   document.querySelector('.sidebar').classList.toggle('collapsed');
 }
+
+// ---- Mobile Sidebar ----
+function toggleMobileSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  sidebar.classList.toggle('mobile-open');
+  overlay.classList.toggle('active');
+  document.body.style.overflow = sidebar.classList.contains('mobile-open') ? 'hidden' : '';
+}
+
+function closeMobileSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  if (sidebar) sidebar.classList.remove('mobile-open');
+  if (overlay) overlay.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+// Cerrar sidebar móvil al redimensionar a desktop
+window.addEventListener('resize', function() {
+  if (window.innerWidth > 768) {
+    closeMobileSidebar();
+  }
+});
 
 // ---- Renderizar Panel de Inicio ----
 function renderInicio() {

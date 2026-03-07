@@ -31,6 +31,9 @@
 
   <div class="app-container">
 
+    <!-- Sidebar Overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeMobileSidebar()"></div>
+
     <!-- ========== SIDEBAR ========== -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
@@ -102,6 +105,9 @@
     <main class="main-content">
       <!-- Top Header -->
       <header class="top-header">
+        <button class="mobile-menu-btn" onclick="toggleMobileSidebar()" title="Menú">
+          <i class="bi bi-list"></i>
+        </button>
         <div class="page-title">
           <i class="bi bi-house-door-fill"></i>
           <h1>Panel de Control</h1>
