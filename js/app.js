@@ -1723,14 +1723,14 @@ function renderDashboard() {
       </div>
     </div>
 
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
+    <div class="dashboard-two-col" style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
       <!-- Gráfico de ventas por fecha -->
       <div class="data-table-container">
         <div class="table-header"><h3>📈 Ventas por Día</h3></div>
         <div style="padding:20px;">
           ${sortedDates.map(([fecha, total]) => `
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-              <span style="width:90px; font-size:12px; color:var(--text-light);">${fecha}</span>
+            <div class="dashboard-bar-row" style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+              <span class="dashboard-date-label" style="width:90px; font-size:12px; color:var(--text-light);">${fecha}</span>
               <div style="flex:1; height:24px; background:var(--accent-light); border-radius:4px; overflow:hidden;">
                 <div style="width:${(total / maxDateSale * 100).toFixed(1)}%; height:100%; background:linear-gradient(90deg, var(--primary), var(--accent)); border-radius:4px; display:flex; align-items:center; justify-content:flex-end; padding-right:6px;">
                   <span style="font-size:10px; color:#fff; font-weight:700;">$${total.toFixed(0)}</span>

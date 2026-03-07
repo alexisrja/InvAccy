@@ -1025,6 +1025,10 @@ a {
   #section-config .page-content > div[style*="grid-template-columns"] {
     grid-template-columns: 1fr !important;
   }
+  /* Dashboard two-col grid: 1 column on tablet */
+  .dashboard-two-col {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 /* =============================================
@@ -1259,6 +1263,38 @@ a {
     grid-template-columns: 1fr;
   }
 
+  /* --- Dashboard two-col --- */
+  .dashboard-two-col {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dashboard-date-label {
+    width: 70px !important;
+    font-size: 11px !important;
+  }
+
+  /* --- Nueva Venta botones --- */
+  #section-nueva-venta div[style*="justify-content:flex-end"] {
+    flex-direction: column !important;
+  }
+
+  #section-nueva-venta div[style*="justify-content:flex-end"] .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* --- Etiquetas header buttons --- */
+  #section-etiquetas .section-header > div {
+    flex-direction: column;
+    width: 100%;
+    gap: 6px;
+  }
+
+  #section-etiquetas .section-header > div .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
   /* --- Etiquetas --- */
   .etiquetas-preview-grid {
     justify-content: center;
@@ -1344,6 +1380,21 @@ a {
     grid-template-columns: 1fr;
   }
 
+  /* Nueva Venta botones */
+  #section-nueva-venta div[style*="justify-content:flex-end"] {
+    flex-direction: column !important;
+  }
+
+  #section-nueva-venta div[style*="justify-content:flex-end"] .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Sale total */
+  .sale-total {
+    font-size: 20px;
+  }
+
   /* Notif panel */
   .notif-panel {
     right: 5px;
@@ -1391,6 +1442,21 @@ a {
     grid-template-columns: 1fr !important;
   }
 
+  /* Dashboard two-col grid */
+  .dashboard-two-col {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dashboard-date-label {
+    width: 60px !important;
+    font-size: 10px !important;
+    flex-shrink: 0;
+  }
+
+  .dashboard-bar-row {
+    gap: 6px !important;
+  }
+
   /* Etiquetas section header buttons */
   #section-etiquetas .section-header > div {
     flex-direction: column;
@@ -1401,6 +1467,16 @@ a {
   #section-etiquetas .section-header > div .btn {
     width: 100%;
     justify-content: center;
+  }
+
+  /* Ramos grid small */
+  .ramos-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .ramo-card-header {
+    flex-direction: column;
+    gap: 8px;
   }
 
   .login-card {
