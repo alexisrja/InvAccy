@@ -238,8 +238,8 @@
           </div>
 
           <!-- Alertas de stock bajo -->
-          <div style="margin-top: 28px;">
-            <h3 style="font-size:16px; font-weight:700; margin-bottom:12px;"><i class="bi bi-exclamation-triangle" style="color:#ff9800;"></i> Alertas de Stock</h3>
+          <div class="stock-alerts-section">
+            <h3><i class="bi bi-exclamation-triangle" style="color:#ff9800;"></i> Alertas de Stock</h3>
             <div id="low-stock-alerts"></div>
           </div>
         </div>
@@ -248,7 +248,7 @@
       <!-- ========== PAGE: NUEVA VENTA ========== -->
       <div class="page-section" id="section-nueva-venta">
         <div class="page-content">
-          <div class="data-table-container" style="max-width:800px;">
+          <div class="data-table-container venta-form-container">
             <div class="table-header">
               <h3>🌹 Registrar Venta</h3>
             </div>
@@ -270,7 +270,7 @@
                 Total: <span id="venta-total">$0.00</span>
               </div>
 
-              <div style="display:flex; gap:10px; justify-content:flex-end;">
+              <div class="venta-actions">
                 <button class="btn btn-outline" onclick="navigateTo('inicio')">Cancelar</button>
                 <button class="btn btn-primary" onclick="guardarVenta()" style="font-size:15px; padding:12px 28px;">
                   <i class="bi bi-check-lg"></i> Confirmar Venta
@@ -535,7 +535,7 @@
           <div class="section-header">
             <h2>Configuración</h2>
           </div>
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; max-width:900px;">
+          <div class="config-grid">
             <!-- General -->
             <div class="data-table-container" style="padding:24px;">
               <h3 style="font-size:15px; font-weight:700; margin-bottom:16px;"><i class="bi bi-building"></i> Empresa</h3>
@@ -613,7 +613,7 @@
               </div>
             </div>
           </div>
-          <div style="margin-top:20px; max-width:900px;">
+          <div class="config-save-row">
             <button class="btn btn-primary" onclick="saveConfig()" style="font-size:15px; padding:12px 32px;">
               <i class="bi bi-check-lg"></i> Guardar Configuración
             </button>
