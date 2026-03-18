@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="icon" type="image/png" href="img/favicon.png" />
   <link rel="apple-touch-icon" href="img/favicon.png" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
   <div class="login-gate active" id="login-gate">
@@ -72,6 +73,9 @@
         <a class="nav-item" data-section="inventario" onclick="navigateTo('inventario')">
           <i class="bi bi-box-seam"></i><span>Inventario</span>
         </a>
+        <a class="nav-item" data-section="produccion" onclick="navigateTo('produccion')">
+          <i class="bi bi-gear-wide-connected"></i><span>Producción</span>
+        </a>
         <a class="nav-item" data-section="clientes" onclick="navigateTo('clientes')">
           <i class="bi bi-people"></i><span>Clientes</span>
         </a>
@@ -84,7 +88,7 @@
 
         <div class="nav-section-title">Herramientas</div>
         <a class="nav-item" data-section="ramos" onclick="navigateTo('ramos')">
-          <i class="bi bi-flower2"></i><span>Ramos</span>
+          <i class="bi bi-box-seam"></i><span>Venta Paquetes</span>
         </a>
         <a class="nav-item" data-section="etiquetas" onclick="navigateTo('etiquetas')">
           <i class="bi bi-tags"></i><span>Etiquetas</span>
@@ -222,11 +226,18 @@
               <div class="card-desc">Stock actual de paquetes.</div>
             </div>
 
-            <!-- Ramos -->
+            <!-- Producción -->
+            <div class="card" onclick="navigateTo('produccion')">
+              <div class="card-icon"><i class="bi bi-gear-fill"></i></div>
+              <div class="card-title">Producción</div>
+              <div class="card-desc">Registra proceso, merma y neto.</div>
+            </div>
+
+            <!-- Venta por Paquetes -->
             <div class="card" onclick="navigateTo('ramos')">
-              <div class="card-icon"><i class="bi bi-flower2"></i></div>
-              <div class="card-title">Ramos y Arreglos</div>
-              <div class="card-desc">Combinaciones y bouquets.</div>
+              <div class="card-icon"><i class="bi bi-box-seam-fill"></i></div>
+              <div class="card-title">Venta por Paquetes</div>
+              <div class="card-desc">Vende paquetes de rosas rápido.</div>
             </div>
 
             <!-- Etiquetas -->
@@ -314,9 +325,14 @@
         <div class="page-content">
           <div class="section-header">
             <h2>Control de Inventario</h2>
-            <button class="btn btn-primary" onclick="openAddRosaModal()">
-              <i class="bi bi-plus-lg"></i> Nueva Entrada
-            </button>
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-outline" onclick="toggleLotesHistorial()">
+                <i class="bi bi-clock-history"></i> Historial de Lotes
+              </button>
+              <button class="btn btn-primary" onclick="openAddRosaModal()">
+                <i class="bi bi-plus-lg"></i> Nueva Rosa
+              </button>
+            </div>
           </div>
           <div class="data-table-container">
             <table class="data-table">
@@ -328,10 +344,33 @@
                   <th>Stock Mínimo</th>
                   <th>Estado</th>
                   <th>Proveedor</th>
-                  <th>Ajustar</th>
+                  <th>Último Lote</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody id="inventario-tbody"></tbody>
+            </table>
+          </div>
+
+          <!-- Historial de Lotes (colapsable) -->
+          <div id="lotes-historial-container" class="data-table-container" style="margin-top:20px; display:none;">
+            <div class="table-header">
+              <h3><i class="bi bi-box-seam"></i> Historial de Lotes</h3>
+              <span id="lotes-count" style="font-size:13px; color:var(--text-light);">0 lotes</span>
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Lote #</th>
+                  <th>Fecha</th>
+                  <th>Tipo</th>
+                  <th>Rosa</th>
+                  <th>Paquetes</th>
+                  <th>Proveedor</th>
+                  <th>Notas</th>
+                </tr>
+              </thead>
+              <tbody id="lotes-historial-tbody"></tbody>
             </table>
           </div>
         </div>
@@ -422,16 +461,194 @@
         </div>
       </div>
 
-      <!-- ========== PAGE: RAMOS ========== -->
+      <!-- ========== PAGE: PRODUCCIÓN ========== -->
+      <div class="page-section" id="section-produccion">
+        <div class="page-content">
+          <div class="section-header">
+            <h2>Producción</h2>
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-outline" onclick="exportProduccionCSV()"><i class="bi bi-download"></i> Exportar CSV</button>
+              <button class="btn btn-primary" onclick="openProduccionModal()"><i class="bi bi-plus-lg"></i> Registrar Producción</button>
+            </div>
+          </div>
+
+          <!-- TABS para cambiar vista -->
+          <div style="display:flex; gap:8px; margin-bottom:16px; border-bottom:1px solid var(--border);">
+            <button class="btn btn-tab" id="prod-tab-tabla" onclick="switchProduccionTab('tabla')" style="border-bottom:3px solid var(--primary); color:var(--primary); background:transparent; border-radius:0; padding:8px 16px;">
+              <i class="bi bi-table"></i> Vista de Tabla
+            </button>
+            <button class="btn btn-tab" id="prod-tab-matriz" onclick="switchProduccionTab('matriz')" style="border-bottom:3px solid transparent; color:var(--text-light); background:transparent; border-radius:0; padding:8px 16px;">
+              <i class="bi bi-grid-3x3"></i> Vista de Matriz Diaria
+            </button>
+          </div>
+
+          <!-- VISTA TABLA -->
+          <div id="prod-vista-tabla">
+            <div class="stats-bar" style="margin-bottom:16px;">
+              <div class="stat-card">
+                <div class="stat-icon sales"><i class="bi bi-box-seam"></i></div>
+                <div class="stat-info">
+                  <h3 id="prod-kpi-procesado">0</h3>
+                  <p>Procesado</p>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon warning"><i class="bi bi-exclamation-triangle"></i></div>
+                <div class="stat-info">
+                  <h3 id="prod-kpi-merma">0</h3>
+                  <p>Merma</p>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon roses"><i class="bi bi-check-circle"></i></div>
+                <div class="stat-info">
+                  <h3 id="prod-kpi-neto">0</h3>
+                  <p>Neto Producido</p>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon clients"><i class="bi bi-percent"></i></div>
+                <div class="stat-info">
+                  <h3 id="prod-kpi-merma-pct">0%</h3>
+                  <p>% Merma</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="data-table-container" style="margin-bottom:16px; padding:14px;">
+              <div class="form-row" style="align-items:flex-end;">
+                <div class="form-group" style="margin:0;">
+                  <label>Desde</label>
+                  <input type="date" id="prod-filter-desde" onchange="renderProduccion()" />
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label>Hasta</label>
+                  <input type="date" id="prod-filter-hasta" onchange="renderProduccion()" />
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label>Variedad</label>
+                  <select id="prod-filter-rosa" onchange="renderProduccion()">
+                    <option value="">Todas</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label>Módulo</label>
+                  <input type="text" id="prod-filter-modulo" placeholder="Todos" oninput="renderProduccion()" />
+                </div>
+                <button class="btn btn-outline" type="button" onclick="clearProduccionFilters()"><i class="bi bi-arrow-counterclockwise"></i> Limpiar</button>
+              </div>
+            </div>
+
+            <div class="data-table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Fecha</th>
+                    <th>Módulo</th>
+                    <th>Rosa</th>
+                    <th>Procesado</th>
+                    <th>Merma</th>
+                    <th>% Merma</th>
+                    <th>Neto</th>
+                    <th>Responsable</th>
+                    <th>Destino</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody id="produccion-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- VISTA MATRIZ DIARIA -->
+          <div id="prod-vista-matriz" style="display:none;">
+            <div class="data-table-container" style="margin-bottom:16px; padding:14px;">
+              <div class="form-row" style="align-items:flex-end;">
+                <div class="form-group" style="margin:0;">
+                  <label>Mes y Año</label>
+                  <input type="month" id="prod-matriz-mes" onchange="renderProduccionMatrizDiaria()" />
+                </div>
+                <button class="btn btn-outline" type="button" onclick="clearProduccionMatrizFiltros()"><i class="bi bi-arrow-counterclockwise"></i> Limpiar</button>
+              </div>
+            </div>
+
+            <div class="data-table-container" style="overflow-x:auto;">
+              <table class="data-table" id="produccion-matriz-tabla" style="font-size:12px;">
+                <thead>
+                  <tr>
+                    <th style="min-width:120px;">Rosa</th>
+                    <th style="text-align:center; width:40px;">1</th>
+                    <th style="text-align:center; width:40px;">2</th>
+                    <th style="text-align:center; width:40px;">3</th>
+                    <th style="text-align:center; width:40px;">4</th>
+                    <th style="text-align:center; width:40px;">5</th>
+                    <th style="text-align:center; width:40px;">6</th>
+                    <th style="text-align:center; width:40px;">7</th>
+                    <th style="text-align:center; width:40px;">8</th>
+                    <th style="text-align:center; width:40px;">9</th>
+                    <th style="text-align:center; width:40px;">10</th>
+                    <th style="text-align:center; width:40px;">11</th>
+                    <th style="text-align:center; width:40px;">12</th>
+                    <th style="text-align:center; width:40px;">13</th>
+                    <th style="text-align:center; width:40px;">14</th>
+                    <th style="text-align:center; width:40px;">15</th>
+                    <th style="text-align:center; width:40px;">16</th>
+                    <th style="text-align:center; width:40px;">17</th>
+                    <th style="text-align:center; width:40px;">18</th>
+                    <th style="text-align:center; width:40px;">19</th>
+                    <th style="text-align:center; width:40px;">20</th>
+                    <th style="text-align:center; width:40px;">21</th>
+                    <th style="text-align:center; width:40px;">22</th>
+                    <th style="text-align:center; width:40px;">23</th>
+                    <th style="text-align:center; width:40px;">24</th>
+                    <th style="text-align:center; width:40px;">25</th>
+                    <th style="text-align:center; width:40px;">26</th>
+                    <th style="text-align:center; width:40px;">27</th>
+                    <th style="text-align:center; width:40px;">28</th>
+                    <th style="text-align:center; width:40px;">29</th>
+                    <th style="text-align:center; width:40px;">30</th>
+                    <th style="text-align:center; width:40px;">31</th>
+                    <th style="text-align:center; min-width:60px;">Total</th>
+                  </tr>
+                </thead>
+                <tbody id="produccion-matriz-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== PAGE: VENTA POR PAQUETES ========== -->
       <div class="page-section" id="section-ramos">
         <div class="page-content">
           <div class="section-header">
-            <h2>Ramos y Arreglos</h2>
-            <button class="btn btn-primary" onclick="openAddRamoModal()"><i class="bi bi-plus-lg"></i> Nuevo Arreglo</button>
+            <h2>Venta por Paquetes</h2>
+            <button class="btn btn-primary" onclick="openVentaPaqueteModal()"><i class="bi bi-plus-lg"></i> Nueva Venta</button>
           </div>
 
-          <!-- Lista de Ramos -->
-          <div id="ramos-grid" class="ramos-grid"></div>
+          <!-- Historial de ventas por paquete -->
+          <div class="data-table-container">
+            <div class="table-header">
+              <h3><i class="bi bi-clock-history"></i> Ventas de Paquetes Recientes</h3>
+              <span id="paquetes-total-ventas" style="font-size:13px; color:var(--text-light);">0 ventas</span>
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Fecha</th>
+                  <th>Rosa</th>
+                  <th>Paquetes</th>
+                  <th>Precio Unit.</th>
+                  <th>Total</th>
+                  <th>Cliente / Persona</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody id="paquetes-ventas-tbody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -627,6 +844,86 @@
   <!-- ========== MODALS ========== -->
 
   <!-- Modal: Rosa -->
+  <!-- Modal: Imprimir Etiquetas tras agregar -->
+  <!-- Modal: Entrada/Salida por Lote -->
+  <div class="modal-overlay" id="lote-modal">
+    <div class="modal" style="max-width:520px;">
+      <div class="modal-header">
+        <h3 id="lote-modal-title"><i class="bi bi-box-seam" style="color:var(--primary);"></i> Entrada por Lote</h3>
+        <button class="modal-close" onclick="closeModal('lote-modal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <form class="modal-body" id="lote-form" onsubmit="event.preventDefault(); guardarLote();">
+        <div id="lote-rosa-info" style="background:var(--bg-main); border-radius:10px; padding:14px; margin-bottom:16px; display:flex; align-items:center; gap:12px;">
+          <span id="lote-rosa-dot" class="color-dot" style="width:16px; height:16px;"></span>
+          <div>
+            <strong id="lote-rosa-nombre" style="font-size:16px;"></strong>
+            <div id="lote-rosa-stock" style="font-size:12px; color:var(--text-light);"></div>
+          </div>
+        </div>
+        <input type="hidden" id="lote-rosa-id" />
+        <input type="hidden" id="lote-tipo" value="entrada" />
+        <div class="form-row">
+          <div class="form-group">
+            <label>Cantidad de Paquetes *</label>
+            <input type="number" id="lote-cantidad" min="1" placeholder="50" required />
+          </div>
+          <div class="form-group">
+            <label>Proveedor</label>
+            <select id="lote-proveedor">
+              <option value="">Mismo del catálogo</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Fecha de Recepción</label>
+            <input type="date" id="lote-fecha" />
+          </div>
+          <div class="form-group">
+            <label>N° Factura / Referencia</label>
+            <input type="text" id="lote-referencia" placeholder="Ej: FAC-0012" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Notas (opcional)</label>
+          <input type="text" id="lote-notas" placeholder="Ej: Calidad premium, lote de temporada..." />
+        </div>
+        <!-- Resumen -->
+        <div id="lote-resumen" style="background:var(--accent-light); border-radius:10px; padding:14px; margin-top:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:13px; color:var(--text-medium);">Nuevo stock después de la entrada</span>
+            <strong id="lote-nuevo-stock" style="font-size:18px; color:var(--primary);">—</strong>
+          </div>
+        </div>
+      </form>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('lote-modal')">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarLote()"><i class="bi bi-check-lg"></i> Registrar Lote</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="print-labels-modal">
+    <div class="modal" style="max-width:420px;">
+      <div class="modal-header">
+        <h3><i class="bi bi-tags" style="color:var(--primary);"></i> Imprimir Etiquetas</h3>
+        <button class="modal-close" onclick="closeModal('print-labels-modal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-body" style="text-align:center; padding:24px;">
+        <div style="font-size:40px; margin-bottom:12px;">🏷️</div>
+        <p id="print-labels-msg" style="font-size:15px; margin-bottom:16px; color:var(--text-medium);"></p>
+        <div class="form-group" style="max-width:200px; margin:0 auto;">
+          <label style="font-size:13px;">Cantidad de etiquetas</label>
+          <input type="number" id="print-labels-qty" min="1" value="1" style="text-align:center; font-size:16px; font-weight:600;" />
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content:center; gap:12px;">
+        <button class="btn btn-outline" onclick="closeModal('print-labels-modal')"><i class="bi bi-x"></i> No, gracias</button>
+        <button class="btn btn-primary" onclick="confirmPrintLabels()"><i class="bi bi-printer"></i> Imprimir</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="rosa-modal">
     <div class="modal">
       <div class="modal-header">
@@ -772,56 +1069,131 @@
     </div>
   </div>
 
-  <!-- Modal: Ramo -->
-  <div class="modal-overlay" id="ramo-modal">
-    <div class="modal" style="max-width:650px;">
+  <!-- Modal: Producción -->
+  <div class="modal-overlay" id="produccion-modal">
+    <div class="modal" style="max-width:620px;">
       <div class="modal-header">
-        <h3 id="ramo-modal-title">Nuevo Arreglo Floral</h3>
-        <button class="modal-close" onclick="closeModal('ramo-modal')"><i class="bi bi-x-lg"></i></button>
+        <h3 id="produccion-modal-title"><i class="bi bi-gear-wide-connected" style="color:var(--primary);"></i> Registrar Producción</h3>
+        <button class="modal-close" onclick="closeModal('produccion-modal')"><i class="bi bi-x-lg"></i></button>
       </div>
-      <form class="modal-body" id="ramo-form" onsubmit="event.preventDefault(); saveRamo();">
+      <form class="modal-body" id="produccion-form" onsubmit="event.preventDefault(); saveProduccion();">
         <div class="form-row">
           <div class="form-group">
-            <label>Nombre del Arreglo *</label>
-            <input type="text" id="ramo-nombre" placeholder="Ej: Bouquet Romántico" required />
+            <label>Fecha *</label>
+            <input type="date" id="produccion-fecha" required />
           </div>
           <div class="form-group">
-            <label>Tipo</label>
-            <select id="ramo-tipo">
-              <option value="Bouquet">Bouquet</option>
-              <option value="Centro de Mesa">Centro de Mesa</option>
-              <option value="Arreglo">Arreglo</option>
-              <option value="Corona">Corona</option>
-              <option value="Caja">Caja de Rosas</option>
-              <option value="Personalizado">Personalizado</option>
+            <label>Módulo *</label>
+            <input type="text" id="produccion-modulo" placeholder="Ej: Módulo 1" required />
+          </div>
+          <div class="form-group">
+            <label>Responsable *</label>
+            <input type="text" id="produccion-responsable" placeholder="Ej: Equipo A" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Rosa *</label>
+            <select id="produccion-rosa" required onchange="updateProduccionPreview()">
+              <option value="">Seleccionar rosa...</option>
             </select>
           </div>
-        </div>
-        <div class="form-group">
-          <label>Descripción</label>
-          <textarea id="ramo-desc" rows="2" placeholder="Descripción del arreglo..."></textarea>
-        </div>
-        <div class="form-group">
-          <label>Composición (Rosas)</label>
-          <div id="ramo-composicion"></div>
-          <button type="button" class="btn btn-outline" onclick="addRamoRosa()" style="margin-top:8px; font-size:12px;">
-            <i class="bi bi-plus-lg"></i> Agregar Rosa
-          </button>
+          <div class="form-group">
+            <label>Destino *</label>
+            <input type="text" id="produccion-destino" placeholder="Ej: Empaque mayorista" required />
+          </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>Precio de Venta ($)</label>
-            <input type="number" id="ramo-precio" step="0.01" placeholder="0.00" />
+            <label>Paquetes Procesados *</label>
+            <input type="number" id="produccion-cantidad" min="1" placeholder="50" required oninput="updateProduccionPreview()" />
           </div>
           <div class="form-group">
-            <label>Costo Estimado</label>
-            <input type="text" id="ramo-costo" readonly style="background:var(--bg-main);" value="$0.00" />
+            <label>Merma (paquetes)</label>
+            <input type="number" id="produccion-merma" min="0" value="0" oninput="updateProduccionPreview()" />
           </div>
+        </div>
+        <div class="form-group">
+          <label>Notas</label>
+          <input type="text" id="produccion-notas" placeholder="Observaciones del proceso..." />
+        </div>
+        <div style="background:var(--bg-main); border-radius:10px; padding:14px; margin-top:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:13px; color:var(--text-light);">Neto producido</span>
+            <strong id="produccion-neto" style="font-size:18px; color:var(--primary);">0 paquetes</strong>
+          </div>
+          <div id="produccion-stock-info" style="margin-top:6px; font-size:12px; color:var(--text-light);"></div>
+        </div>
+      </form>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('produccion-modal')">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveProduccion()"><i class="bi bi-check-lg"></i> Guardar Producción</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Venta por Paquete -->
+  <div class="modal-overlay" id="ramo-modal">
+    <div class="modal" style="max-width:550px;">
+      <div class="modal-header">
+        <h3 id="ramo-modal-title"><i class="bi bi-box-seam" style="color:var(--primary);"></i> Venta por Paquetes</h3>
+        <button class="modal-close" onclick="closeModal('ramo-modal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <form class="modal-body" id="paquete-form" onsubmit="event.preventDefault(); guardarVentaPaquete();">
+        <div class="form-group">
+          <label>Rosa *</label>
+          <select id="paquete-rosa" required onchange="updatePaquetePreview()">
+            <option value="">Seleccionar rosa...</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Cantidad de Paquetes *</label>
+            <input type="number" id="paquete-cantidad" min="1" value="1" placeholder="1" required oninput="updatePaquetePreview()" />
+          </div>
+          <div class="form-group">
+            <label>Precio por Paquete ($)</label>
+            <input type="number" id="paquete-precio" step="0.01" placeholder="0.00" oninput="updatePaquetePreview()" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Cliente / Persona</label>
+          <input type="text" id="paquete-cliente" placeholder="Nombre del cliente o persona" />
+        </div>
+        <div class="form-group">
+          <label>Notas (opcional)</label>
+          <input type="text" id="paquete-notas" placeholder="Ej: Pedido urgente, entrega especial..." />
+        </div>
+        <!-- Resumen -->
+        <div id="paquete-resumen" style="background:var(--bg-main); border-radius:10px; padding:16px; margin-top:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:13px; color:var(--text-light);">Total de la venta</span>
+            <span id="paquete-total" style="font-size:22px; font-weight:800; color:var(--primary);">$0.00</span>
+          </div>
+          <div id="paquete-stock-info" style="font-size:12px; color:var(--text-light); margin-top:6px;"></div>
         </div>
       </form>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeModal('ramo-modal')">Cancelar</button>
-        <button class="btn btn-primary" onclick="saveRamo()"><i class="bi bi-check-lg"></i> Guardar Arreglo</button>
+        <button class="btn btn-primary" onclick="guardarVentaPaquete()"><i class="bi bi-cart-check"></i> Registrar Venta</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Vista Previa de Factura -->
+  <div class="modal-overlay" id="factura-preview-modal">
+    <div class="modal" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header">
+        <h3><i class="bi bi-file-pdf" style="color:#d32f2f;"></i> Vista Previa de Factura</h3>
+        <button class="modal-close" onclick="closeModal('factura-preview-modal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-body" id="factura-preview-content" style="padding: 20px; background: white;">
+        <!-- Factura previsualizada aquí -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('factura-preview-modal')">Cerrar</button>
+        <button class="btn btn-primary" onclick="descargarFacturaPDF()"><i class="bi bi-download"></i> Descargar PDF</button>
+        <button class="btn btn-secondary" onclick="imprimirFactura()" style="background: #1976d2;"><i class="bi bi-printer"></i> Imprimir</button>
       </div>
     </div>
   </div>

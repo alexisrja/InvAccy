@@ -34,17 +34,18 @@ const appData = {
     { id: 1004, fecha: "2026-02-26", cliente: "Rosas Express", items: [{ rosa: "High & Magic", cantidad: 150, precio: 3.80 }, { rosa: "Circus", cantidad: 40, precio: 3.20 }], total: 698.00, estado: "Completada" },
   ],
   nextVentaId: 1005,
-  ramos: [
-    { id: 1, nombre: "Bouquet Romántico", tipo: "Bouquet", desc: "12 rosas rojas con follaje", composicion: [{ rosaId: 1, cantidad: 12 }], precio: 45.00 },
-    { id: 2, nombre: "Centro Elegance", tipo: "Centro de Mesa", desc: "Mix de colores para evento", composicion: [{ rosaId: 2, cantidad: 8 }, { rosaId: 3, cantidad: 8 }, { rosaId: 6, cantidad: 4 }], precio: 68.00 },
-    { id: 3, nombre: "Caja Sorpresa", tipo: "Caja", desc: "24 rosas bicolor en caja premium", composicion: [{ rosaId: 7, cantidad: 24 }], precio: 95.00 },
-  ],
+  ventasPaquetes: [],
+  nextPaqueteVentaId: 5001,
+  lotes: [],
+  nextLoteId: 1,
+  produccion: [],
+  nextProduccionId: 1,
   config: {
     empresa: "Accy Flor",
     telefono: "555-9000",
     email: "contacto@accyflor.com",
     direccion: "",
-    moneda: "USD",
+    moneda: "MXN",
     alertaPct: 100,
     iva: 16,
     tema: "rosa"
@@ -118,13 +119,14 @@ function navigateTo(section) {
     'inicio': ' Panel de Control',
     'nueva-venta': '🌹 Nueva Venta',
     'catalogo': '📋 Catálogo de Rosas',
+    'produccion': '🏭 Producción',
     'clientes': '👥 Clientes',
     'proveedores': '🚚 Proveedores',
     'inventario': '📦 Inventario',
     'historial': '📜 Historial de Ventas',
     'dashboard': '📊 Dashboard de Ventas',
     'etiquetas': '🏷️ Etiquetas',
-    'ramos': '💐 Ramos y Arreglos',
+    'ramos': '📦 Venta por Paquetes',
     'config': '⚙️ Configuración'
   };
   const titleEl = document.querySelector('.page-title h1');
@@ -135,6 +137,7 @@ function navigateTo(section) {
   // Cargar datos de la sección
   if (section === 'catalogo') renderCatalogo();
   if (section === 'inventario') renderInventario();
+  if (section === 'produccion') renderProduccion();
   if (section === 'clientes') renderClientes();
   if (section === 'proveedores') renderProveedores();
   if (section === 'historial') renderHistorial();
@@ -142,7 +145,7 @@ function navigateTo(section) {
   if (section === 'inicio') renderInicio();
   if (section === 'nueva-venta') initNuevaVenta();
   if (section === 'etiquetas') renderEtiquetasTable();
-  if (section === 'ramos') renderRamos();
+  if (section === 'ramos') renderVentaPaquetes();
 
   // Cerrar sidebar en móvil al navegar
   closeMobileSidebar();
@@ -231,6 +234,9 @@ function renderInventario() {
   tbody.innerHTML = appData.rosas.map(r => {
     const estado = r.stock <= r.minStock * 0.5 ? 'Crítico' : r.stock <= r.minStock ? 'Bajo' : r.stock <= r.minStock * 1.5 ? 'Normal' : 'Óptimo';
     const estadoClass = estado === 'Crítico' ? 'low' : estado === 'Bajo' ? 'medium' : 'high';
+    // Último lote de esta rosa
+    const ultimoLote = appData.lotes.find(l => l.rosaId === r.id);
+    const loteInfo = ultimoLote ? `<span style="font-size:11px;">L-${String(ultimoLote.id).padStart(4,'0')}</span><br><span style="font-size:10px; color:var(--text-light);">${ultimoLote.fecha} · ${ultimoLote.cantidad} paq.</span>` : '<span style="font-size:11px; color:var(--text-light);">Sin lotes</span>';
     return `
       <tr>
         <td><span class="color-dot ${r.color}"></span>${r.nombre}</td>
@@ -239,13 +245,17 @@ function renderInventario() {
         <td>${r.minStock} paquetes</td>
         <td><span class="stock-badge ${estadoClass}">${estado}</span></td>
         <td>${r.proveedor}</td>
+        <td>${loteInfo}</td>
         <td>
-          <button class="btn btn-outline" style="font-size:12px;" onclick="adjustStock(${r.id}, 'add')"><i class="bi bi-plus-lg"></i></button>
-          <button class="btn btn-outline" style="font-size:12px;" onclick="adjustStock(${r.id}, 'remove')"><i class="bi bi-dash-lg"></i></button>
+          <button class="btn btn-primary" style="font-size:12px; padding:4px 10px;" onclick="openLoteModal(${r.id}, 'entrada')" title="Entrada por lote"><i class="bi bi-plus-lg"></i> Lote</button>
+          <button class="btn btn-outline" style="font-size:12px; padding:4px 10px;" onclick="openLoteModal(${r.id}, 'salida')" title="Salida de stock"><i class="bi bi-dash-lg"></i></button>
         </td>
       </tr>
     `;
   }).join('');
+
+  // Actualizar historial de lotes si está visible
+  renderLotesHistorial();
 }
 
 // ---- Renderizar Clientes ----
@@ -702,29 +712,173 @@ function abrirVentanaFactura(ventaId, fecha, cliente, items, subtotal, iva, mont
   printWin.document.close();
 }
 
-// ---- Ajustar Stock ----
-function adjustStock(rosaId, type) {
+// ---- Ajustar Stock por Lote ----
+function openLoteModal(rosaId, tipo) {
   const rosa = appData.rosas.find(r => r.id === rosaId);
   if (!rosa) return;
 
-  const cantidad = prompt(`${type === 'add' ? 'Agregar' : 'Retirar'} paquetes de "${rosa.nombre}":\nStock actual: ${rosa.stock}\n\nCantidad:`);
-  if (!cantidad || isNaN(cantidad) || parseInt(cantidad) <= 0) return;
+  document.getElementById('lote-rosa-id').value = rosaId;
+  document.getElementById('lote-tipo').value = tipo;
+  document.getElementById('lote-rosa-nombre').textContent = rosa.nombre;
+  document.getElementById('lote-rosa-stock').textContent = `Stock actual: ${rosa.stock} paquetes · ${capitalizeFirst(rosa.color)} · ${rosa.variedad}`;
 
-  const num = parseInt(cantidad);
-  if (type === 'add') {
-    rosa.stock += num;
-    showToast(`+${num} paquetes de ${rosa.nombre} agregados`, 'success');
+  const dot = document.getElementById('lote-rosa-dot');
+  dot.className = 'color-dot ' + rosa.color;
+  dot.style.width = '16px';
+  dot.style.height = '16px';
+
+  const titleEl = document.getElementById('lote-modal-title');
+  if (tipo === 'entrada') {
+    titleEl.innerHTML = '<i class="bi bi-box-arrow-in-down" style="color:var(--success);"></i> Entrada por Lote';
+    document.getElementById('lote-resumen').style.background = 'var(--accent-light)';
   } else {
-    if (num > rosa.stock) {
-      showToast('No hay suficiente stock', 'error');
-      return;
-    }
-    rosa.stock -= num;
-    showToast(`-${num} paquetes de ${rosa.nombre} retirados`, 'warning');
+    titleEl.innerHTML = '<i class="bi bi-box-arrow-up" style="color:var(--danger);"></i> Salida de Stock';
+    document.getElementById('lote-resumen').style.background = '#fff0f0';
   }
+
+  // Fecha de hoy
+  const hoy = new Date();
+  document.getElementById('lote-fecha').value = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+
+  // Poblar proveedores
+  const provSelect = document.getElementById('lote-proveedor');
+  provSelect.innerHTML = `<option value="">${rosa.proveedor} (actual)</option>` +
+    appData.proveedores.map(p => `<option value="${p.nombre}">${p.nombre}</option>`).join('');
+
+  // Limpiar campos
+  document.getElementById('lote-cantidad').value = '';
+  document.getElementById('lote-referencia').value = '';
+  document.getElementById('lote-notas').value = '';
+  document.getElementById('lote-nuevo-stock').textContent = '—';
+
+  // Evento para actualizar resumen en vivo
+  const cantInput = document.getElementById('lote-cantidad');
+  cantInput.oninput = function() {
+    const cant = parseInt(this.value) || 0;
+    const nuevoStock = tipo === 'entrada' ? rosa.stock + cant : rosa.stock - cant;
+    const stockEl = document.getElementById('lote-nuevo-stock');
+    stockEl.textContent = nuevoStock + ' paquetes';
+    if (tipo === 'salida' && cant > rosa.stock) {
+      stockEl.style.color = 'var(--danger)';
+      stockEl.textContent = 'Insuficiente';
+    } else {
+      stockEl.style.color = 'var(--primary)';
+    }
+  };
+
+  showModal('lote-modal');
+  setTimeout(() => cantInput.focus(), 100);
+}
+
+function guardarLote() {
+  const rosaId = parseInt(document.getElementById('lote-rosa-id').value);
+  const tipo = document.getElementById('lote-tipo').value;
+  const cantidad = parseInt(document.getElementById('lote-cantidad').value);
+  const proveedor = document.getElementById('lote-proveedor').value;
+  const fecha = document.getElementById('lote-fecha').value;
+  const referencia = document.getElementById('lote-referencia').value.trim();
+  const notas = document.getElementById('lote-notas').value.trim();
+
+  if (!cantidad || cantidad <= 0) {
+    showToast('Ingresa una cantidad válida', 'error');
+    return;
+  }
+
+  const rosa = appData.rosas.find(r => r.id === rosaId);
+  if (!rosa) return;
+
+  if (tipo === 'salida' && cantidad > rosa.stock) {
+    showToast(`Stock insuficiente de "${rosa.nombre}" (disponible: ${rosa.stock})`, 'error');
+    return;
+  }
+
+  // Aplicar cambio de stock
+  if (tipo === 'entrada') {
+    rosa.stock += cantidad;
+  } else {
+    rosa.stock -= cantidad;
+  }
+
+  // Registrar lote
+  const lote = {
+    id: appData.nextLoteId++,
+    tipo: tipo,
+    rosaId: rosa.id,
+    rosaNombre: rosa.nombre,
+    rosaColor: rosa.color,
+    cantidad: cantidad,
+    proveedor: proveedor || rosa.proveedor,
+    fecha: fecha,
+    referencia: referencia,
+    notas: notas
+  };
+  appData.lotes.unshift(lote);
+
+  closeModal('lote-modal');
+
+  if (tipo === 'entrada') {
+    showToast(`Lote L-${String(lote.id).padStart(4,'0')}: +${cantidad} paquetes de "${rosa.nombre}" registrados`, 'success');
+  } else {
+    showToast(`Salida L-${String(lote.id).padStart(4,'0')}: -${cantidad} paquetes de "${rosa.nombre}"`, 'warning');
+  }
+
   renderInventario();
   notificacionesRead = false;
   refreshNotifDot();
+
+  // Ofrecer imprimir etiquetas solo en entradas
+  if (tipo === 'entrada') {
+    offerPrintLabels(rosa, cantidad);
+  }
+}
+
+function toggleLotesHistorial() {
+  const container = document.getElementById('lotes-historial-container');
+  if (container.style.display === 'none') {
+    container.style.display = 'block';
+    renderLotesHistorial();
+  } else {
+    container.style.display = 'none';
+  }
+}
+
+function renderLotesHistorial() {
+  const tbody = document.getElementById('lotes-historial-tbody');
+  const countEl = document.getElementById('lotes-count');
+  if (!tbody) return;
+
+  const lotes = appData.lotes || [];
+  countEl.textContent = `${lotes.length} lote${lotes.length !== 1 ? 's' : ''}`;
+
+  if (lotes.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:var(--text-light);">
+      <i class="bi bi-box-seam" style="font-size:28px; display:block; margin-bottom:8px;"></i>
+      Aún no hay lotes registrados.
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = lotes.map(l => {
+    const tipoClass = l.tipo === 'entrada' ? 'high' : 'low';
+    const tipoIcon = l.tipo === 'entrada' ? 'bi-arrow-down-circle-fill' : 'bi-arrow-up-circle-fill';
+    const tipoLabel = l.tipo === 'entrada' ? 'Entrada' : 'Salida';
+    return `
+      <tr>
+        <td><strong>L-${String(l.id).padStart(4,'0')}</strong></td>
+        <td>${l.fecha}</td>
+        <td><span class="stock-badge ${tipoClass}"><i class="bi ${tipoIcon}"></i> ${tipoLabel}</span></td>
+        <td><span class="color-dot ${l.rosaColor}"></span>${l.rosaNombre}</td>
+        <td><strong>${l.tipo === 'entrada' ? '+' : '-'}${l.cantidad}</strong> paq.</td>
+        <td>${l.proveedor}</td>
+        <td style="font-size:12px; color:var(--text-light);">${l.referencia ? l.referencia + ' · ' : ''}${l.notas || '—'}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// ---- Compat: adjustStock ahora abre el modal de lote ----
+function adjustStock(rosaId, type) {
+  openLoteModal(rosaId, type === 'add' ? 'entrada' : 'salida');
 }
 
 // ---- CRUD Rosas ----
@@ -780,6 +934,11 @@ function saveRosa() {
     data.id = Math.max(...appData.rosas.map(r => r.id), 0) + 1;
     appData.rosas.push(data);
     showToast(`"${data.nombre}" agregada al catálogo`, 'success');
+    closeModal('rosa-modal');
+    renderCatalogo();
+    // Ofrecer imprimir etiquetas para la nueva rosa
+    offerPrintLabels(data, data.stock || 1);
+    return;
   }
 
   closeModal('rosa-modal');
@@ -1082,6 +1241,120 @@ function capitalizeFirst(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+function formatMXN(value) {
+  const num = Number(value) || 0;
+  return `$${num.toFixed(2)} MXN`;
+}
+
+// ---- Impresión rápida de etiquetas tras agregar rosas ----
+let pendingLabelRosa = null;
+
+function offerPrintLabels(rosa, suggestedQty) {
+  pendingLabelRosa = rosa;
+  const msg = document.getElementById('print-labels-msg');
+  msg.innerHTML = `¿Deseas imprimir etiquetas para<br><strong style="color:var(--primary); font-size:17px;">${rosa.nombre}</strong> <span class="color-dot ${rosa.color}" style="width:10px;height:10px;display:inline-block;vertical-align:middle;"></span><br><span style="font-size:13px;">${capitalizeFirst(rosa.color)} · ${formatMXN(rosa.precioTallo)} · ${rosa.tallosCm} cm</span>`;
+  document.getElementById('print-labels-qty').value = suggestedQty || 1;
+  showModal('print-labels-modal');
+}
+
+function confirmPrintLabels() {
+  if (!pendingLabelRosa) return;
+  const qty = parseInt(document.getElementById('print-labels-qty').value) || 1;
+  printQuickLabels(pendingLabelRosa, qty);
+  closeModal('print-labels-modal');
+  pendingLabelRosa = null;
+}
+
+function printQuickLabels(rosa, quantity) {
+  const code = getRosaCode(rosa);
+  let labelsHTML = '';
+  for (let i = 0; i < quantity; i++) {
+    labelsHTML += `
+      <div class="etiqueta-card">
+        <div class="etiqueta-header">
+          <span class="etiqueta-brand">Accy Flor</span>
+          <span class="color-dot ${rosa.color}"></span>
+        </div>
+        <div class="etiqueta-body">
+          <div class="etiqueta-nombre">${rosa.nombre}</div>
+          <div class="etiqueta-detail">${capitalizeFirst(rosa.color)} · ${rosa.variedad || ''}</div>
+          <div class="etiqueta-detail">${rosa.tallosCm} cm</div>
+          <div class="etiqueta-precio">$${rosa.precioTallo.toFixed(2)}</div>
+        </div>
+        <div class="etiqueta-barcode">${generateBarcode(code)}</div>
+      </div>
+    `;
+  }
+
+  const printWindow = window.open('', '_blank', 'width=800,height=600');
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Etiquetas - ${rosa.nombre} - Accy Flor</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; padding: 10mm; }
+        .etiquetas-grid {
+          display: flex; flex-wrap: wrap; gap: 8px;
+          justify-content: flex-start;
+        }
+        .etiqueta-card {
+          border: 1.5px solid #2d1f27;
+          border-radius: 8px;
+          padding: 10px;
+          width: 70mm;
+          min-height: 40mm;
+          page-break-inside: avoid;
+        }
+        .etiqueta-header {
+          display: flex; justify-content: space-between; align-items: center;
+          border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-bottom: 6px;
+        }
+        .etiqueta-brand { font-size: 10px; font-weight: 700; color: #6b3a5d; }
+        .etiqueta-nombre { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+        .etiqueta-detail { font-size: 10px; color: #666; }
+        .etiqueta-precio { font-size: 16px; font-weight: 800; color: #6b3a5d; margin-top: 4px; }
+        .etiqueta-barcode { margin-top: 6px; }
+        .color-dot {
+          width: 10px; height: 10px; border-radius: 50%; display: inline-block;
+          border: 1px solid rgba(0,0,0,0.2);
+        }
+        .color-dot.rojo { background: #e53935; }
+        .color-dot.blanco { background: #f5f5f5; }
+        .color-dot.rosa { background: #ec407a; }
+        .color-dot.amarillo { background: #fdd835; }
+        .color-dot.naranja { background: #ff9800; }
+        .color-dot.lavanda { background: #ab47bc; }
+        .color-dot.bicolor { background: linear-gradient(135deg, #e53935 50%, #fdd835 50%); }
+        .no-print { text-align: center; margin-top: 20px; }
+        .no-print button {
+          padding: 10px 24px; font-size: 14px; border: none; border-radius: 8px;
+          cursor: pointer; font-weight: 600; margin: 0 6px;
+        }
+        .btn-print { background: #6b3a5d; color: white; }
+        .btn-print:hover { background: #4e2a44; }
+        .btn-close-print { background: #eee; color: #333; }
+        .btn-close-print:hover { background: #ddd; }
+        @media print {
+          .no-print { display: none !important; }
+          body { padding: 5mm; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="etiquetas-grid">${labelsHTML}</div>
+      <div class="no-print">
+        <button class="btn-print" onclick="window.print();">🖨️ Imprimir</button>
+        <button class="btn-close-print" onclick="window.close();">✕ Cerrar</button>
+      </div>
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
+  showToast(`${quantity} etiqueta(s) de "${rosa.nombre}" listas para imprimir`, 'success');
+}
+
 // ---- Etiquetas ----
 function generateBarcode(code) {
   // Genera un código de barras SVG simple basado en el código
@@ -1268,197 +1541,928 @@ function imprimirEtiquetas() {
   showToast(`Imprimiendo ${selected.length} etiqueta(s)...`, 'success');
 }
 
-// ---- Ramos y Arreglos ----
-let ramoComposicion = [];
+// ---- Venta por Paquetes ----
+function renderVentaPaquetes() {
+  const tbody = document.getElementById('paquetes-ventas-tbody');
+  const countEl = document.getElementById('paquetes-total-ventas');
 
-function renderRamos() {
-  const grid = document.getElementById('ramos-grid');
-  if (appData.ramos.length === 0) {
-    grid.innerHTML = `
-      <div class="empty-state">
-        <i class="bi bi-flower2"></i>
-        <h3>Sin arreglos</h3>
-        <p>Crea tu primer ramo o arreglo floral.</p>
-      </div>
+  const ventas = appData.ventasPaquetes || [];
+  if (ventas.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:40px; color:var(--text-light);">
+      <i class="bi bi-box-seam" style="font-size:32px; display:block; margin-bottom:8px;"></i>
+      Sin ventas de paquetes aún.<br>Presiona <strong>"Nueva Venta"</strong> para registrar una.
+    </td></tr>`;
+    countEl.textContent = '0 ventas';
+    return;
+  }
+
+  countEl.textContent = `${ventas.length} venta${ventas.length !== 1 ? 's' : ''}`;
+
+  tbody.innerHTML = ventas.map(v => `
+    <tr>
+      <td>#${v.id}</td>
+      <td>${v.fecha}</td>
+      <td><span class="color-dot ${v.rosaColor}"></span><strong>${v.rosaNombre}</strong></td>
+      <td><strong>${v.cantidad}</strong></td>
+      <td>${formatMXN(v.precioUnit)}</td>
+      <td><strong style="color:var(--primary);">${formatMXN(v.total)}</strong></td>
+      <td>${v.cliente || '<span style="color:var(--text-light);">Venta directa</span>'}</td>
+      <td>
+        <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="showFacturaPreview(${JSON.stringify(v).replace(/"/g, '&quot;')})">
+          <i class="bi bi-file-pdf"></i> Factura
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openVentaPaqueteModal() {
+  document.getElementById('paquete-form').reset();
+  document.getElementById('paquete-total').textContent = formatMXN(0);
+  document.getElementById('paquete-stock-info').textContent = '';
+  document.getElementById('paquete-cliente').value = '';
+  
+  // Repoblar select de rosas
+  const rosaSelect = document.getElementById('paquete-rosa');
+  rosaSelect.innerHTML = '<option value="">Seleccionar rosa...</option>' +
+    appData.rosas.map(r => `<option value="${r.id}">${r.nombre} (${capitalizeFirst(r.color)}) — Stock: ${r.stock} — ${formatMXN(r.precioTallo)}</option>`).join('');
+  
+  showModal('ramo-modal');
+}
+
+function updatePaquetePreview() {
+  const rosaId = parseInt(document.getElementById('paquete-rosa').value);
+  const cantidad = parseInt(document.getElementById('paquete-cantidad').value) || 0;
+  const precioInput = document.getElementById('paquete-precio');
+  const totalEl = document.getElementById('paquete-total');
+  const stockInfo = document.getElementById('paquete-stock-info');
+
+  const rosa = appData.rosas.find(r => r.id === rosaId);
+  if (rosa) {
+    // Auto-llenar precio si está vacío
+    if (!precioInput.value || precioInput.value === '0') {
+      precioInput.value = rosa.precioTallo.toFixed(2);
+    }
+    const precio = parseFloat(precioInput.value) || 0;
+    const total = cantidad * precio;
+    totalEl.textContent = formatMXN(total);
+
+    const stockDespues = rosa.stock - cantidad;
+    if (cantidad > rosa.stock) {
+      stockInfo.innerHTML = `<span style="color:var(--danger);"><i class="bi bi-exclamation-triangle"></i> Stock insuficiente (disponible: ${rosa.stock})</span>`;
+    } else {
+      stockInfo.innerHTML = `Stock actual: <strong>${rosa.stock}</strong> → Después: <strong>${stockDespues}</strong> paquetes`;
+    }
+  } else {
+    totalEl.textContent = formatMXN(0);
+    stockInfo.textContent = '';
+  }
+}
+
+function guardarVentaPaquete() {
+  const rosaId = parseInt(document.getElementById('paquete-rosa').value);
+  const cantidad = parseInt(document.getElementById('paquete-cantidad').value) || 0;
+  const precio = parseFloat(document.getElementById('paquete-precio').value) || 0;
+  const cliente = document.getElementById('paquete-cliente').value.trim();
+  const notas = document.getElementById('paquete-notas').value.trim();
+
+  if (!rosaId) { showToast('Selecciona una rosa', 'error'); return; }
+  if (cantidad <= 0) { showToast('La cantidad debe ser mayor a 0', 'error'); return; }
+  if (precio <= 0) { showToast('El precio debe ser mayor a 0', 'error'); return; }
+
+  const rosa = appData.rosas.find(r => r.id === rosaId);
+  if (!rosa) { showToast('Rosa no encontrada', 'error'); return; }
+  if (cantidad > rosa.stock) { showToast(`Stock insuficiente de "${rosa.nombre}" (disponible: ${rosa.stock})`, 'error'); return; }
+
+  const total = cantidad * precio;
+
+  // Descontar stock
+  rosa.stock -= cantidad;
+
+  // Fecha actual
+  const hoy = new Date();
+  const fecha = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+
+  // Registrar en ventasPaquetes
+  const ventaPaq = {
+    id: appData.nextPaqueteVentaId++,
+    fecha: fecha,
+    rosaId: rosa.id,
+    rosaNombre: rosa.nombre,
+    rosaColor: rosa.color,
+    cantidad: cantidad,
+    precioUnit: precio,
+    total: total,
+    cliente: cliente || '',
+    notas: notas
+  };
+  appData.ventasPaquetes.unshift(ventaPaq);
+
+  // También registrar en historial general de ventas
+  appData.ventas.unshift({
+    id: appData.nextVentaId++,
+    fecha: fecha,
+    cliente: cliente || 'Venta directa',
+    items: [{ rosa: rosa.nombre, cantidad: cantidad, precio: precio }],
+    total: total,
+    estado: 'Completada'
+  });
+
+  closeModal('ramo-modal');
+  showToast(`Venta registrada: ${cantidad} paquetes de "${rosa.nombre}" — $${total.toFixed(2)}`, 'success');
+  notificacionesRead = false;
+  refreshNotifDot();
+  renderVentaPaquetes();
+
+  // Mostrar vista previa de factura después de un breve delay
+  setTimeout(() => {
+    const ventaGuardada = appData.ventasPaquetes[0]; // La última venta registrada
+    if (ventaGuardada) {
+      showFacturaPreview(ventaGuardada);
+    }
+  }, 800);
+}
+
+// ---- Producción ----
+function getProduccionFiltrada() {
+  const desdeEl = document.getElementById('prod-filter-desde');
+  const hastaEl = document.getElementById('prod-filter-hasta');
+  const rosaEl = document.getElementById('prod-filter-rosa');
+  const moduloEl = document.getElementById('prod-filter-modulo');
+
+  const desde = desdeEl ? desdeEl.value : '';
+  const hasta = hastaEl ? hastaEl.value : '';
+  const rosaId = rosaEl ? rosaEl.value : '';
+  const modulo = moduloEl ? moduloEl.value.trim().toLowerCase() : '';
+
+  return (appData.produccion || []).filter(item => {
+    if (desde && item.fecha < desde) return false;
+    if (hasta && item.fecha > hasta) return false;
+    if (rosaId && String(item.rosaId) !== String(rosaId)) return false;
+    if (modulo && !String(item.modulo || '').toLowerCase().includes(modulo)) return false;
+    return true;
+  });
+}
+
+function renderProduccionKPIs(list) {
+  const totalProcesado = list.reduce((sum, item) => sum + (item.cantidad || 0), 0);
+  const totalMerma = list.reduce((sum, item) => sum + (item.merma || 0), 0);
+  const totalNeto = list.reduce((sum, item) => sum + (item.neto || 0), 0);
+  const mermaPct = totalProcesado > 0 ? (totalMerma / totalProcesado) * 100 : 0;
+
+  const procesadoEl = document.getElementById('prod-kpi-procesado');
+  const mermaEl = document.getElementById('prod-kpi-merma');
+  const netoEl = document.getElementById('prod-kpi-neto');
+  const mermaPctEl = document.getElementById('prod-kpi-merma-pct');
+
+  if (procesadoEl) procesadoEl.textContent = totalProcesado.toLocaleString();
+  if (mermaEl) mermaEl.textContent = totalMerma.toLocaleString();
+  if (netoEl) netoEl.textContent = totalNeto.toLocaleString();
+  if (mermaPctEl) mermaPctEl.textContent = `${mermaPct.toFixed(1)}%`;
+}
+
+function ensureProduccionFilters() {
+  const rosaSelect = document.getElementById('prod-filter-rosa');
+  if (!rosaSelect) return;
+  const current = rosaSelect.value;
+  rosaSelect.innerHTML = '<option value="">Todas</option>' +
+    appData.rosas.map(r => `<option value="${r.id}">${r.nombre} (${capitalizeFirst(r.color)})</option>`).join('');
+  if (current) rosaSelect.value = current;
+}
+
+function renderProduccion() {
+  const tbody = document.getElementById('produccion-tbody');
+  if (!tbody) return;
+
+  ensureProduccionFilters();
+  const list = getProduccionFiltrada();
+  renderProduccionKPIs(list);
+
+  if (list.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="11" style="text-align:center; padding:36px; color:var(--text-light);">
+          <i class="bi bi-gear-wide-connected" style="font-size:30px; display:block; margin-bottom:8px;"></i>
+          Sin registros de producción.
+        </td>
+      </tr>
     `;
     return;
   }
-  grid.innerHTML = appData.ramos.map(ramo => {
-    const costo = calcRamoCosto(ramo.composicion);
-    const ganancia = ramo.precio - costo;
-    const rosasDesc = ramo.composicion.map(c => {
-      const rosa = appData.rosas.find(r => r.id === c.rosaId);
-      return rosa ? `${c.cantidad}× ${rosa.nombre}` : `${c.cantidad}× (?)`;
-    }).join(', ');
-    const totalTallos = ramo.composicion.reduce((s, c) => s + c.cantidad, 0);
-    return `
-      <div class="ramo-card">
-        <div class="ramo-card-header">
-          <div>
-            <div class="ramo-card-title">${ramo.nombre}</div>
-            <span class="stock-badge high" style="font-size:11px;">${ramo.tipo}</span>
-          </div>
-          <div class="ramo-card-price">$${ramo.precio.toFixed(2)}</div>
-        </div>
-        <div class="ramo-card-body">
-          <p style="font-size:13px; color:var(--text-light); margin-bottom:8px;">${ramo.desc || 'Sin descripción'}</p>
-          <div class="ramo-composicion-list">
-            <strong style="font-size:12px;">Composición (${totalTallos} paquetes):</strong>
-            <div style="font-size:12px; color:var(--text-medium); margin-top:4px;">${rosasDesc}</div>
-          </div>
-          <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:12px;">
-            <span>Costo: <strong>$${costo.toFixed(2)}</strong></span>
-            <span style="color:${ganancia >= 0 ? 'var(--success)' : 'var(--danger)'};">Ganancia: <strong>$${ganancia.toFixed(2)}</strong></span>
-          </div>
-        </div>
-        <div class="ramo-card-footer">
-          <button class="btn btn-outline" style="font-size:12px;" onclick="editRamo(${ramo.id})"><i class="bi bi-pencil"></i> Editar</button>
-          <button class="btn btn-primary" style="font-size:12px;" onclick="sellRamo(${ramo.id})"><i class="bi bi-cart-plus"></i> Vender</button>
-          <button class="btn btn-outline" style="font-size:12px; color:var(--danger); border-color:var(--danger);" onclick="deleteRamo(${ramo.id})"><i class="bi bi-trash"></i></button>
-        </div>
-      </div>
+
+  tbody.innerHTML = list.map(item => `
+    <tr>
+      <td>#${item.id}</td>
+      <td>${item.fecha}</td>
+      <td>${item.modulo || '—'}</td>
+      <td><span class="color-dot ${item.rosaColor}"></span><strong>${item.rosaNombre}</strong></td>
+      <td>${item.cantidad} paq.</td>
+      <td>${item.merma} paq.</td>
+      <td>${item.cantidad > 0 ? ((item.merma / item.cantidad) * 100).toFixed(1) : '0.0'}%</td>
+      <td><strong>${item.neto} paq.</strong></td>
+      <td>${item.responsable}</td>
+      <td>${item.destino}</td>
+      <td><span class="stock-badge high">Completada</span></td>
+    </tr>
+  `).join('');
+}
+
+function openProduccionModal() {
+  const form = document.getElementById('produccion-form');
+  form.reset();
+
+  const hoy = new Date();
+  const fecha = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+  document.getElementById('produccion-fecha').value = fecha;
+  document.getElementById('produccion-modulo').value = 'Módulo 1';
+  document.getElementById('produccion-merma').value = 0;
+  document.getElementById('produccion-neto').textContent = '0 paquetes';
+  document.getElementById('produccion-stock-info').textContent = '';
+
+  const rosaSelect = document.getElementById('produccion-rosa');
+  rosaSelect.innerHTML = '<option value="">Seleccionar rosa...</option>' +
+    appData.rosas.map(r => `<option value="${r.id}">${r.nombre} (${capitalizeFirst(r.color)}) — Stock: ${r.stock}</option>`).join('');
+
+  showModal('produccion-modal');
+}
+
+function updateProduccionPreview() {
+  const rosaId = parseInt(document.getElementById('produccion-rosa').value);
+  const cantidad = parseInt(document.getElementById('produccion-cantidad').value) || 0;
+  const merma = parseInt(document.getElementById('produccion-merma').value) || 0;
+  const neto = Math.max(cantidad - merma, 0);
+  const netoEl = document.getElementById('produccion-neto');
+  const stockInfoEl = document.getElementById('produccion-stock-info');
+
+  netoEl.textContent = `${neto} paquete${neto !== 1 ? 's' : ''}`;
+
+  const rosa = appData.rosas.find(r => r.id === rosaId);
+  if (!rosa) {
+    stockInfoEl.textContent = '';
+    return;
+  }
+
+  if (cantidad > rosa.stock) {
+    stockInfoEl.innerHTML = `<span style="color:var(--danger);"><i class="bi bi-exclamation-triangle"></i> Stock insuficiente (disponible: ${rosa.stock})</span>`;
+  } else {
+    stockInfoEl.innerHTML = `Stock actual: <strong>${rosa.stock}</strong> → Después del proceso: <strong>${rosa.stock - cantidad}</strong> paquetes`;
+  }
+}
+
+function saveProduccion() {
+  const fecha = document.getElementById('produccion-fecha').value;
+  const modulo = document.getElementById('produccion-modulo').value.trim();
+  const rosaId = parseInt(document.getElementById('produccion-rosa').value);
+  const cantidad = parseInt(document.getElementById('produccion-cantidad').value) || 0;
+  const merma = parseInt(document.getElementById('produccion-merma').value) || 0;
+  const responsable = document.getElementById('produccion-responsable').value.trim();
+  const destino = document.getElementById('produccion-destino').value.trim();
+  const notas = document.getElementById('produccion-notas').value.trim();
+
+  if (!fecha || !modulo || !rosaId || !responsable || !destino) {
+    showToast('Completa los campos obligatorios de producción', 'error');
+    return;
+  }
+  if (cantidad <= 0) {
+    showToast('La cantidad procesada debe ser mayor a 0', 'error');
+    return;
+  }
+  if (merma < 0 || merma > cantidad) {
+    showToast('La merma debe ser entre 0 y la cantidad procesada', 'error');
+    return;
+  }
+
+  const rosa = appData.rosas.find(r => r.id === rosaId);
+  if (!rosa) {
+    showToast('Rosa no encontrada', 'error');
+    return;
+  }
+  if (cantidad > rosa.stock) {
+    showToast(`Stock insuficiente de "${rosa.nombre}"`, 'error');
+    return;
+  }
+
+  const neto = cantidad - merma;
+
+  rosa.stock -= cantidad;
+
+  appData.produccion.unshift({
+    id: appData.nextProduccionId++,
+    fecha,
+    modulo,
+    rosaId: rosa.id,
+    rosaNombre: rosa.nombre,
+    rosaColor: rosa.color,
+    cantidad,
+    merma,
+    neto,
+    responsable,
+    destino,
+    notas
+  });
+
+  closeModal('produccion-modal');
+  showToast(`Producción registrada: ${cantidad} paq. de "${rosa.nombre}" (neto: ${neto})`, 'success');
+  notificacionesRead = false;
+  refreshNotifDot();
+  renderProduccion();
+}
+
+function clearProduccionFilters() {
+  const ids = ['prod-filter-desde', 'prod-filter-hasta', 'prod-filter-rosa', 'prod-filter-modulo'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.tagName === 'SELECT') el.value = '';
+    else el.value = '';
+  });
+  renderProduccion();
+}
+
+function exportProduccionCSV() {
+  const data = getProduccionFiltrada();
+  if (data.length === 0) {
+    showToast('No hay datos de producción para exportar', 'error');
+    return;
+  }
+
+  const headers = ['ID', 'Fecha', 'Modulo', 'Rosa', 'Procesado', 'Merma', 'Porcentaje Merma', 'Neto', 'Responsable', 'Destino', 'Notas'];
+  const rows = data.map(item => [
+    item.id,
+    item.fecha,
+    item.modulo || '',
+    item.rosaNombre,
+    item.cantidad,
+    item.merma,
+    item.cantidad > 0 ? ((item.merma / item.cantidad) * 100).toFixed(2) + '%': '0.00%',
+    item.neto,
+    item.responsable,
+    item.destino,
+    item.notas || ''
+  ]);
+
+  const csv = [headers, ...rows].map(row =>
+    row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(',')
+  ).join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  const now = new Date();
+  const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+
+  link.setAttribute('href', url);
+  link.setAttribute('download', `produccion_${stamp}.csv`);
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+
+  showToast(`CSV exportado (${data.length} registros)`, 'success');
+}
+
+// ---- Producción - Matriz Diaria ----
+function switchProduccionTab(tab) {
+  const tablaEl = document.getElementById('prod-vista-tabla');
+  const matrizEl = document.getElementById('prod-vista-matriz');
+  const tabTablaBtn = document.getElementById('prod-tab-tabla');
+  const tabMatrizBtn = document.getElementById('prod-tab-matriz');
+
+  if (tab === 'tabla') {
+    tablaEl.style.display = 'block';
+    matrizEl.style.display = 'none';
+    if (tabTablaBtn) tabTablaBtn.style.borderBottomColor = 'var(--primary)';
+    if (tabTablaBtn) tabTablaBtn.style.color = 'var(--primary)';
+    if (tabMatrizBtn) tabMatrizBtn.style.borderBottomColor = 'transparent';
+    if (tabMatrizBtn) tabMatrizBtn.style.color = 'var(--text-light)';
+  } else {
+    tablaEl.style.display = 'none';
+    matrizEl.style.display = 'block';
+    if (tabTablaBtn) tabTablaBtn.style.borderBottomColor = 'transparent';
+    if (tabTablaBtn) tabTablaBtn.style.color = 'var(--text-light)';
+    if (tabMatrizBtn) tabMatrizBtn.style.borderBottomColor = 'var(--primary)';
+    if (tabMatrizBtn) tabMatrizBtn.style.color = 'var(--primary)';
+    renderProduccionMatrizDiaria();
+  }
+}
+
+function renderProduccionMatrizDiaria() {
+  const mesInput = document.getElementById('prod-matriz-mes');
+  let mesStr = mesInput ? mesInput.value : '';
+  
+  // Si no hay mes seleccionado, usar mes actual
+  if (!mesStr) {
+    const hoy = new Date();
+    mesStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
+    if (mesInput) mesInput.value = mesStr;
+  }
+
+  // Parsear mes (formato YYYY-MM)
+  const [ano, mes] = mesStr.split('-').map(x => parseInt(x, 10));
+  
+  // Obtener número de días en el mes
+  const diasEnMes = new Date(ano, mes, 0).getDate();
+
+  // Agrupar producción por rosa y día
+  const matrizData = {}; // { rosaId: { rosaNombre, rosaColor, { dia: cantidad, ... } }, ... }
+
+  appData.produccion.forEach(item => {
+    const itemMes = item.fecha.substring(5, 7);
+    const itemAno = item.fecha.substring(0, 4);
+    
+    if (parseInt(itemAno) === ano && parseInt(itemMes) === mes) {
+      const dia = parseInt(item.fecha.substring(8, 10));
+      
+      if (!matrizData[item.rosaId]) {
+        matrizData[item.rosaId] = {
+          rosaNombre: item.rosaNombre,
+          rosaColor: item.rosaColor,
+          dias: {}
+        };
+      }
+      
+      if (!matrizData[item.rosaId].dias[dia]) {
+        matrizData[item.rosaId].dias[dia] = 0;
+      }
+      
+      matrizData[item.rosaId].dias[dia] += item.cantidad;
+    }
+  });
+
+  const tbody = document.getElementById('produccion-matriz-tbody');
+  if (!tbody) return;
+
+  if (Object.keys(matrizData).length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="34" style="text-align:center; padding:36px; color:var(--text-light);">
+          <i class="bi bi-info-circle" style="font-size:24px; display:block; margin-bottom:8px;"></i>
+          No hay registros de producción para ${mesStr}
+        </td>
+      </tr>
     `;
+    return;
+  }
+
+  // Ordenar rosas por nombre
+  const roasOrdenadas = Object.values(matrizData).sort((a, b) =>
+    a.rosaNombre.localeCompare(b.rosaNombre)
+  );
+
+  tbody.innerHTML = roasOrdenadas.map(rosa => {
+    let totalRosa = 0;
+    let fila = `
+      <tr>
+        <td style="font-weight:bold;">
+          <span class="color-dot ${rosa.rosaColor}" style="margin-right:6px;"></span>${rosa.rosaNombre}
+        </td>
+    `;
+
+    // Generar celdas para cada día
+    for (let dia = 1; dia <= 31; dia++) {
+      const cant = rosa.dias[dia] || 0;
+      const bgcolor = cant > 0 ? 'rgba(76, 175, 80, 0.15)' : 'transparent';
+      const valor = cant > 0 ? cant : '—';
+      totalRosa += cant;
+      fila += `<td style="text-align:center; background-color:${bgcolor}; font-weight:${cant > 0 ? 'bold' : 'normal'};">${valor}</td>`;
+    }
+
+    // Celda de total
+    fila += `<td style="text-align:center; font-weight:bold; background-color:rgba(33, 150, 243, 0.1);">${totalRosa}</td>`;
+    fila += `</tr>`;
+
+    return fila;
   }).join('');
 }
 
-function calcRamoCosto(composicion) {
-  return composicion.reduce((s, c) => {
-    const rosa = appData.rosas.find(r => r.id === c.rosaId);
-    return s + (rosa ? rosa.precioTallo * c.cantidad : 0);
-  }, 0);
+function clearProduccionMatrizFiltros() {
+  const mesInput = document.getElementById('prod-matriz-mes');
+  if (mesInput) mesInput.value = '';
+  renderProduccionMatrizDiaria();
 }
 
-function openAddRamoModal() {
-  document.getElementById('ramo-modal-title').textContent = 'Nuevo Arreglo Floral';
-  document.getElementById('ramo-form').reset();
-  document.getElementById('ramo-form').dataset.editId = '';
-  document.getElementById('ramo-costo').value = '$0.00';
-  ramoComposicion = [{ rosaId: '', cantidad: 1 }];
-  renderRamoComposicion();
-  showModal('ramo-modal');
-}
+// Variable global para almacenar la venta en vista previa
+let ventaEnPreview = null;
 
-function editRamo(id) {
-  const ramo = appData.ramos.find(r => r.id === id);
-  if (!ramo) return;
-  document.getElementById('ramo-modal-title').textContent = 'Editar Arreglo';
-  document.getElementById('ramo-nombre').value = ramo.nombre;
-  document.getElementById('ramo-tipo').value = ramo.tipo;
-  document.getElementById('ramo-desc').value = ramo.desc || '';
-  document.getElementById('ramo-precio').value = ramo.precio;
-  document.getElementById('ramo-form').dataset.editId = id;
-  ramoComposicion = ramo.composicion.map(c => ({ ...c }));
-  renderRamoComposicion();
-  showModal('ramo-modal');
-}
+function generateFacturaHTML(venta) {
+  if (!venta || !venta.id) {
+    showToast('Error: Factura no disponible', 'error');
+    return '';
+  }
 
-function renderRamoComposicion() {
-  const container = document.getElementById('ramo-composicion');
-  container.innerHTML = ramoComposicion.map((c, idx) => `
-    <div class="sale-item-row" style="margin-bottom:6px;">
-      <div class="form-group" style="margin:0;">
-        <select onchange="updateRamoComp(${idx}, 'rosaId', this.value)" style="font-size:13px; padding:6px 10px;">
-          <option value="">Seleccionar rosa...</option>
-          ${appData.rosas.map(r => `<option value="${r.id}" ${c.rosaId == r.id ? 'selected' : ''}>${r.nombre} (${capitalizeFirst(r.color)})</option>`).join('')}
-        </select>
+  return `
+    <style>
+      @media print {
+        body { margin: 0; padding: 0; }
+        .factura-container { box-shadow: none; border: none; }
+        .no-print { display: none !important; }
+      }
+      .factura-container {
+        position: relative;
+        width: 100%;
+        max-width: 850px;
+        margin: 0 auto;
+        padding: 40px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #333;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      }
+      
+      /* Marca de agua */
+      .factura-container::before {
+        content: '';
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(2.5);
+        opacity: 0.08;
+        z-index: 0;
+        pointer-events: none;
+        width: 200px;
+        height: 200px;
+        background: url('img/favicon.png') center center / contain no-repeat;
+      }
+      
+      .contenido-factura {
+        position: relative;
+        z-index: 1;
+      }
+      
+      .factura-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        border-bottom: 3px solid #d32f2f;
+        padding-bottom: 20px;
+        margin-bottom: 25px;
+      }
+      
+      .empresa-logo {
+        font-size: 42px;
+        font-weight: bold;
+        color: #d32f2f;
+        margin-bottom: 8px;
+      }
+
+      .empresa-logo img {
+        width: 72px;
+        height: 72px;
+        object-fit: contain;
+        vertical-align: middle;
+        margin-right: 10px;
+      }
+      
+      .empresa-info {
+        flex: 1;
+      }
+      
+      .empresa-info h1 {
+        color: #d32f2f;
+        margin: 0 0 5px 0;
+        font-size: 28px;
+        font-weight: 800;
+      }
+      
+      .empresa-info p {
+        margin: 3px 0;
+        color: #666;
+        font-size: 13px;
+      }
+      
+      .factura-num {
+        text-align: right;
+      }
+      
+      .factura-num h2 {
+        margin: 0 0 10px 0;
+        color: #d32f2f;
+        font-size: 32px;
+        font-weight: bold;
+      }
+      
+      .factura-num p {
+        margin: 3px 0;
+        color: #666;
+        font-size: 13px;
+      }
+      
+      .linea-separadora {
+        height: 1px;
+        background: #e0e0e0;
+        margin: 20px 0;
+      }
+      
+      .datos-cliente {
+        background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%);
+        padding: 15px 20px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        border-left: 4px solid #d32f2f;
+      }
+      
+      .datos-cliente h3 {
+        margin: 0 0 10px 0;
+        color: #333;
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      
+      .datos-cliente p {
+        margin: 5px 0;
+        color: #555;
+        font-size: 14px;
+      }
+      
+      .tabla-items {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+        background: white;
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      
+      .tabla-items thead {
+        background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%);
+        color: white;
+      }
+      
+      .tabla-items th {
+        padding: 14px 12px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      
+      .tabla-items td {
+        padding: 14px 12px;
+        border-bottom: 1px solid #e0e0e0;
+        font-size: 14px;
+      }
+      
+      .tabla-items tbody tr:last-child td {
+        border-bottom: none;
+      }
+      
+      .tabla-items tbody tr:hover {
+        background: #f9f9f9;
+      }
+      
+      .numero { text-align: center; }
+      .decimal { text-align: right; }
+      
+      .resumen {
+        display: flex;
+        justify-content: flex-end;
+        margin: 25px 0;
+      }
+      
+      .resumen-items {
+        width: 350px;
+        background: #f5f5f5;
+        border-radius: 6px;
+        padding: 20px;
+      }
+      
+      .resumen-fila {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        font-size: 14px;
+        color: #666;
+        border-bottom: 1px solid #e0e0e0;
+      }
+      
+      .resumen-fila.total {
+        font-weight: 700;
+        font-size: 18px;
+        color: #d32f2f;
+        border-top: 2px solid #d32f2f;
+        border-bottom: none;
+        padding-top: 12px;
+        margin-top: 8px;
+        padding-bottom: 0;
+      }
+      
+      .notas {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 15px;
+        border-radius: 4px;
+        margin: 20px 0;
+      }
+      
+      .notas p {
+        margin: 0;
+        color: #856404;
+        font-size: 13px;
+      }
+      
+      .firma {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 50px;
+        padding-top: 30px;
+        border-top: 1px solid #e0e0e0;
+      }
+      
+      .firma-item {
+        text-align: center;
+        flex: 1;
+      }
+      
+      .firma-linea {
+        width: 150px;
+        height: 2px;
+        background: #333;
+        margin: 0 auto 5px;
+      }
+      
+      .firma-item p {
+        margin: 0;
+        color: #666;
+        font-size: 12px;
+        font-weight: 500;
+      }
+      
+      .pie-pagina {
+        text-align: center;
+        color: #999;
+        font-size: 11px;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #e0e0e0;
+      }
+      
+      .producto-nombre {
+        font-weight: 600;
+        color: #d32f2f;
+      }
+      
+      .codigo-factura {
+        color: #999;
+        font-size: 12px;
+      }
+    </style>
+    
+    <div class="factura-container">
+      <div class="contenido-factura">
+        <div class="factura-header">
+          <div class="empresa-info">
+            <div class="empresa-logo">
+              <img src="img/favicon.png" alt="Accy Flor" /> ACCY FLOR
+            </div>
+            <h1>Accy Flor</h1>
+            <p>Distribuidora Premium de Rosas</p>
+            <p>📞 +34 XXX XXX XXX | 📧 info@accyflor.es</p>
+            <p style="color:#d32f2f; font-weight:600; margin-top:8px;">Coatepec, Veracruz, México • Moneda: MXN</p>
+          </div>
+          <div class="factura-num">
+            <h2>FACTURA</h2>
+            <p class="codigo-factura">Nº <strong>${String(venta.id).padStart(6, '0')}</strong></p>
+            <p class="codigo-factura">Fecha: <strong>${String(venta.fecha)}</strong></p>
+          </div>
+        </div>
+        
+        <div class="linea-separadora"></div>
+        
+        <div class="datos-cliente">
+          <h3>🧑‍💼 Datos del Cliente</h3>
+          ${venta.cliente ? `
+            <p><strong>Nombre:</strong> ${String(venta.cliente).replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+          ` : `
+            <p style="font-style: italic; color: #999;">Venta directa (sin cliente registrado)</p>
+          `}
+        </div>
+        
+        <table class="tabla-items">
+          <thead>
+            <tr>
+              <th style="width: 50%;">Producto</th>
+              <th class="numero" style="width: 15%;">Cantidad</th>
+              <th class="decimal" style="width: 17.5%;">Precio Unit.</th>
+              <th class="decimal" style="width: 17.5%;">Importe</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div class="producto-nombre">${String(venta.rosaNombre).replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+                <div class="codigo-factura">Rosas ${String(venta.rosaColor).replace(/</g, '&lt;').replace(/>/g, '&gt;')} • Paquetes</div>
+              </td>
+              <td class="numero"><strong>${venta.cantidad}</strong></td>
+                <td class="decimal">${formatMXN(venta.precioUnit)}</td>
+                <td class="decimal"><strong>${formatMXN(venta.total)}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <div class="resumen">
+          <div class="resumen-items">
+            <div class="resumen-fila">
+              <span>Subtotal:</span>
+                <span>${formatMXN(venta.total)}</span>
+            </div>
+            <div class="resumen-fila total">
+              <span>TOTAL A PAGAR:</span>
+                <span>${formatMXN(venta.total)}</span>
+            </div>
+          </div>
+        </div>
+        
+        ${venta.notas ? `
+          <div class="notas">
+            <p><strong>📝 Notas:</strong> ${String(venta.notas).replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+          </div>
+        ` : ''}
+        
+        <div class="firma">
+          <div class="firma-item">
+            <div class="firma-linea"></div>
+            <p>Firma del Vendedor</p>
+          </div>
+          <div class="firma-item">
+            <div class="firma-linea"></div>
+            <p>V° B° del Cliente</p>
+          </div>
+        </div>
+        
+        <div class="pie-pagina">
+          <p>✅ Gracias por su compra • Esta factura es un documento legal de la transacción realizada</p>
+          <p>🌹 Accy Flor © 2026 • Todos los derechos reservados</p>
+        </div>
       </div>
-      <div class="form-group" style="margin:0;">
-        <input type="number" min="1" value="${c.cantidad}" onchange="updateRamoComp(${idx}, 'cantidad', this.value)" style="font-size:13px; padding:6px 10px;" placeholder="Cant." />
-      </div>
-      <div></div>
-      <button class="btn btn-outline" onclick="removeRamoComp(${idx})" style="color:var(--danger);height:34px;font-size:12px;"><i class="bi bi-x-lg"></i></button>
     </div>
-  `).join('');
-  updateRamoCosto();
+  `;
 }
 
-function addRamoRosa() {
-  ramoComposicion.push({ rosaId: '', cantidad: 1 });
-  renderRamoComposicion();
+function showFacturaPreview(venta) {
+  ventaEnPreview = venta; // Guardar para usar después
+  const html = generateFacturaHTML(venta);
+  const previewContent = document.getElementById('factura-preview-content');
+  if (previewContent) {
+    previewContent.innerHTML = html;
+  }
+  showModal('factura-preview-modal');
 }
 
-function removeRamoComp(idx) {
-  ramoComposicion.splice(idx, 1);
-  renderRamoComposicion();
-}
+function descargarFacturaPDF() {
+  if (!ventaEnPreview) {
+    showToast('Error: No hay factura para descargar', 'error');
+    return;
+  }
 
-function updateRamoComp(idx, field, value) {
-  ramoComposicion[idx][field] = field === 'cantidad' ? parseInt(value) || 1 : value;
-  updateRamoCosto();
-}
+  if (typeof html2pdf === 'undefined') {
+    showToast('Error: Librería PDF no cargada', 'error');
+    return;
+  }
 
-function updateRamoCosto() {
-  const costo = calcRamoCosto(ramoComposicion.filter(c => c.rosaId));
-  document.getElementById('ramo-costo').value = '$' + costo.toFixed(2);
-}
+  const element = document.getElementById('factura-preview-content');
+  if (!element) return;
 
-function saveRamo() {
-  const form = document.getElementById('ramo-form');
-  const editId = form.dataset.editId;
-  const data = {
-    nombre: document.getElementById('ramo-nombre').value.trim(),
-    tipo: document.getElementById('ramo-tipo').value,
-    desc: document.getElementById('ramo-desc').value.trim(),
-    composicion: ramoComposicion.filter(c => c.rosaId && c.cantidad > 0).map(c => ({ rosaId: parseInt(c.rosaId), cantidad: c.cantidad })),
-    precio: parseFloat(document.getElementById('ramo-precio').value) || 0,
+  const opt = {
+    margin: 5,
+    filename: `factura_${ventaEnPreview.id}_${ventaEnPreview.fecha}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, logging: false },
+    jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
   };
-  if (!data.nombre) { showToast('El nombre es obligatorio', 'error'); return; }
-  if (data.composicion.length === 0) { showToast('Agrega al menos una rosa', 'error'); return; }
 
-  if (editId) {
-    const idx = appData.ramos.findIndex(r => r.id == editId);
-    if (idx >= 0) { appData.ramos[idx] = { ...appData.ramos[idx], ...data }; showToast(`"${data.nombre}" actualizado`, 'success'); }
-  } else {
-    data.id = Math.max(...appData.ramos.map(r => r.id), 0) + 1;
-    appData.ramos.push(data);
-    showToast(`"${data.nombre}" creado`, 'success');
+  try {
+    html2pdf().set(opt).from(element).save();
+    showToast(`Factura #${ventaEnPreview.id} descargada correctamente`, 'success');
+  } catch (error) {
+    console.error('Error al generar PDF:', error);
+    showToast('Error al generar la factura PDF', 'error');
   }
-  closeModal('ramo-modal');
-  renderRamos();
 }
 
-function deleteRamo(id) {
-  const ramo = appData.ramos.find(r => r.id === id);
-  if (!ramo || !confirm(`¿Eliminar "${ramo.nombre}"?`)) return;
-  appData.ramos = appData.ramos.filter(r => r.id !== id);
-  showToast(`"${ramo.nombre}" eliminado`, 'warning');
-  renderRamos();
-}
-
-function sellRamo(id) {
-  const ramo = appData.ramos.find(r => r.id === id);
-  if (!ramo) return;
-  // Verificar stock
-  for (const c of ramo.composicion) {
-    const rosa = appData.rosas.find(r => r.id === c.rosaId);
-    if (!rosa || rosa.stock < c.cantidad) {
-      showToast(`Stock insuficiente de "${rosa ? rosa.nombre : '?'}" para este arreglo`, 'error');
-      return;
-    }
+function imprimirFactura() {
+  if (!ventaEnPreview) {
+    showToast('Error: No hay factura para imprimir', 'error');
+    return;
   }
-  if (!confirm(`¿Vender "${ramo.nombre}" por $${ramo.precio.toFixed(2)}?`)) return;
-  // Descontar stock
-  ramo.composicion.forEach(c => {
-    const rosa = appData.rosas.find(r => r.id === c.rosaId);
-    if (rosa) rosa.stock -= c.cantidad;
-  });
-  // Registrar venta
-  const items = ramo.composicion.map(c => {
-    const rosa = appData.rosas.find(r => r.id === c.rosaId);
-    return { rosa: rosa ? rosa.nombre : '?', cantidad: c.cantidad, precio: rosa ? rosa.precioTallo : 0 };
-  });
-  appData.ventas.unshift({
-    id: appData.nextVentaId++,
-    fecha: '2026-02-28',
-    cliente: 'Venta directa (Arreglo)',
-    items: items,
-    total: ramo.precio,
-    estado: 'Completada'
-  });
-  showToast(`Arreglo "${ramo.nombre}" vendido — $${ramo.precio.toFixed(2)}`, 'success');
-  notificacionesRead = false;
-  refreshNotifDot();
-  renderRamos();
+
+  const element = document.getElementById('factura-preview-content');
+  if (!element) return;
+
+  const printWindow = window.open('', '', 'height=800,width=1000');
+  printWindow.document.write('<html><head><title>Factura #' + ventaEnPreview.id + '</title>');
+  printWindow.document.write('</head><body>');
+  printWindow.document.write(element.innerHTML);
+  printWindow.document.write('</body></html>');
+  printWindow.document.close();
+  
+  setTimeout(() => {
+    printWindow.print();
+  }, 250);
 }
 
 // ---- Búsqueda Global ----
@@ -1491,9 +2495,13 @@ function globalSearch(query) {
     appData.ventas.filter(v => v.cliente.toLowerCase().includes(q) || String(v.id).includes(q))
       .forEach(v => matches.push({ type: 'venta', icon: 'bi-receipt', label: `Venta #${v.id}`, desc: `${v.cliente} — $${v.total.toFixed(2)}`, action: "navigateTo('historial')" }));
 
-    // Buscar ramos
-    appData.ramos.filter(r => r.nombre.toLowerCase().includes(q))
-      .forEach(r => matches.push({ type: 'ramo', icon: 'bi-flower2', label: r.nombre, desc: `${r.tipo} — $${r.precio.toFixed(2)}`, action: "navigateTo('ramos')" }));
+    // Buscar ventas de paquetes
+    (appData.ventasPaquetes || []).filter(v => v.rosaNombre.toLowerCase().includes(q))
+      .forEach(v => matches.push({ type: 'paquete', icon: 'bi-box-seam', label: `${v.rosaNombre} (${v.cantidad} paq.)`, desc: `$${v.total.toFixed(2)} — ${v.fecha}`, action: "navigateTo('ramos')" }));
+
+    // Buscar producción
+    (appData.produccion || []).filter(p => p.rosaNombre.toLowerCase().includes(q) || p.responsable.toLowerCase().includes(q) || p.destino.toLowerCase().includes(q))
+      .forEach(p => matches.push({ type: 'produccion', icon: 'bi-gear-wide-connected', label: `${p.rosaNombre} (${p.neto} neto)`, desc: `${p.modulo || 'Sin módulo'} — ${p.responsable} — ${p.destino}`, action: "navigateTo('produccion')" }));
 
     if (matches.length === 0) {
       results.innerHTML = '<div class="search-result-item" style="justify-content:center;color:var(--text-light);">Sin resultados para "' + query + '"</div>';
