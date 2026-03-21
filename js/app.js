@@ -1,5 +1,5 @@
 /* ============================================
-   ACCY FLOR - Sistema de Inventario de Rosas
+  PRODUCTORA FLORAL VITALY - Sistema de Inventario de Rosas
    JavaScript Principal
    ============================================ */
 
@@ -41,9 +41,9 @@ const appData = {
   produccion: [],
   nextProduccionId: 1,
   config: {
-    empresa: "Accy Flor",
+    empresa: "Productora Floral Vitaly",
     telefono: "555-9000",
-    email: "contacto@accyflor.com",
+    email: "contacto@productorafloralvitaly.com",
     direccion: "",
     moneda: "MXN",
     alertaPct: 100,
@@ -458,7 +458,7 @@ function generarFactura(ventaId, fecha, cliente, items, total) {
   img.onerror = function () {
     abrirVentanaFactura(ventaId, fecha, cliente, items, subtotal, iva, montoIva, totalConIva, config, '');
   };
-  img.src = 'img/favicon.png';
+  img.src = 'img/cercada-factura.png';
 }
 
 function abrirVentanaFactura(ventaId, fecha, cliente, items, subtotal, iva, montoIva, totalConIva, config, faviconBase64) {
@@ -490,8 +490,8 @@ function abrirVentanaFactura(ventaId, fecha, cliente, items, subtotal, iva, mont
       z-index: 0;
     }
     .watermark img {
-      width: 420px;
-      height: 420px;
+      width: 460px;
+      height: 460px;
       object-fit: contain;
     }
     .factura-content { position: relative; z-index: 1; }
@@ -506,7 +506,7 @@ function abrirVentanaFactura(ventaId, fecha, cliente, items, subtotal, iva, mont
       margin-bottom: 30px;
     }
     .factura-brand { display: flex; align-items: center; gap: 14px; }
-    .factura-brand img { width: 56px; height: 56px; border-radius: 12px; }
+    .factura-brand img { width: 74px; height: 74px; border-radius: 12px; object-fit: contain; }
     .factura-brand h1 { font-size: 28px; font-weight: 800; color: #6b3a5d; }
     .factura-brand p { font-size: 12px; color: #6b5460; margin-top: 2px; }
     .factura-id { text-align: right; }
@@ -1246,6 +1246,147 @@ function formatMXN(value) {
   return `$${num.toFixed(2)} MXN`;
 }
 
+const ZPL_DPI = 203;
+const MM_PER_INCH = 25.4;
+const ZPL_DOTS_PER_MM = ZPL_DPI / MM_PER_INCH;
+
+// ZPL size requested: 200 (ancho) x 400 (largo) dots.
+const LABEL_PRINT_WIDTH_DOTS = 200;
+const LABEL_PRINT_HEIGHT_DOTS = 400;
+
+const LABEL_PRINT_WIDTH_MM = LABEL_PRINT_WIDTH_DOTS / ZPL_DOTS_PER_MM;
+const LABEL_PRINT_HEIGHT_MM = LABEL_PRINT_HEIGHT_DOTS / ZPL_DOTS_PER_MM;
+
+function getLabelPrintStyles() {
+  return `
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; padding: 2mm; color: #000; }
+    @page { margin: 0; }
+    .etiquetas-grid,
+    .etiquetas-preview-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5mm;
+      align-content: flex-start;
+    }
+    .etiqueta-card {
+      border: 0.6mm solid #000;
+      border-radius: 1mm;
+      padding: 1.2mm 1.5mm;
+      width: ${LABEL_PRINT_WIDTH_MM}mm;
+      height: ${LABEL_PRINT_HEIGHT_MM}mm;
+      min-height: ${LABEL_PRINT_HEIGHT_MM}mm;
+      max-height: ${LABEL_PRINT_HEIGHT_MM}mm;
+      page-break-inside: avoid;
+      break-inside: avoid;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+    }
+    .etiqueta-card::before { display: none; }
+    .etiqueta-small,
+    .etiqueta-medium,
+    .etiqueta-large {
+      width: ${LABEL_PRINT_WIDTH_MM}mm;
+      height: ${LABEL_PRINT_HEIGHT_MM}mm;
+      min-height: ${LABEL_PRINT_HEIGHT_MM}mm;
+      max-height: ${LABEL_PRINT_HEIGHT_MM}mm;
+    }
+    .etiqueta-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 0.2mm solid #000;
+      padding-bottom: 0.4mm;
+      margin-bottom: 0.6mm;
+    }
+    .etiqueta-brand {
+      font-size: 7px;
+      font-weight: 700;
+      color: #000;
+      text-transform: uppercase;
+      letter-spacing: 0.2px;
+    }
+    .etiqueta-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25mm;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .etiqueta-nombre {
+      font-size: 8.5px;
+      font-weight: 700;
+      color: #000;
+      line-height: 1.15;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .etiqueta-detail {
+      font-size: 6.8px;
+      line-height: 1.15;
+      color: #000;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .etiqueta-precio {
+      font-size: 9px;
+      font-weight: 800;
+      color: #000;
+      line-height: 1.15;
+      margin-top: 0.2mm;
+    }
+    .etiqueta-barcode {
+      margin-top: 0.4mm;
+      padding-top: 0.4mm;
+      border-top: 0.2mm dashed #000;
+    }
+    .etiqueta-barcode svg {
+      width: 100%;
+      height: 9mm !important;
+      display: block;
+    }
+    .etiqueta-barcode text { fill: #000 !important; }
+    .color-dot {
+      width: 2.6mm;
+      height: 2.6mm;
+      border-radius: 50%;
+      display: inline-block;
+      border: 1px solid #000;
+      flex-shrink: 0;
+    }
+    .color-dot.rojo { background: #e53935; }
+    .color-dot.blanco { background: #f5f5f5; }
+    .color-dot.rosa { background: #ec407a; }
+    .color-dot.amarillo { background: #fdd835; }
+    .color-dot.naranja { background: #ff9800; }
+    .color-dot.lavanda { background: #ab47bc; }
+    .color-dot.bicolor { background: linear-gradient(135deg, #e53935 50%, #fdd835 50%); }
+    .no-print { text-align: center; margin-top: 20px; }
+    .no-print button {
+      padding: 10px 24px;
+      font-size: 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      margin: 0 6px;
+    }
+    .btn-print { background: #6b3a5d; color: white; }
+    .btn-print:hover { background: #4e2a44; }
+    .btn-close-print { background: #eee; color: #333; }
+    .btn-close-print:hover { background: #ddd; }
+    @media print {
+      .no-print { display: none !important; }
+      body { padding: 1mm; }
+    }
+  `;
+}
+
 // ---- Impresión rápida de etiquetas tras agregar rosas ----
 let pendingLabelRosa = null;
 
@@ -1272,7 +1413,7 @@ function printQuickLabels(rosa, quantity) {
     labelsHTML += `
       <div class="etiqueta-card">
         <div class="etiqueta-header">
-          <span class="etiqueta-brand">Accy Flor</span>
+          <span class="etiqueta-brand">Productora Floral Vitaly</span>
           <span class="color-dot ${rosa.color}"></span>
         </div>
         <div class="etiqueta-body">
@@ -1291,56 +1432,8 @@ function printQuickLabels(rosa, quantity) {
     <!DOCTYPE html>
     <html>
     <head>
-      <title>Etiquetas - ${rosa.nombre} - Accy Flor</title>
-      <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; padding: 10mm; }
-        .etiquetas-grid {
-          display: flex; flex-wrap: wrap; gap: 8px;
-          justify-content: flex-start;
-        }
-        .etiqueta-card {
-          border: 1.5px solid #2d1f27;
-          border-radius: 8px;
-          padding: 10px;
-          width: 70mm;
-          min-height: 40mm;
-          page-break-inside: avoid;
-        }
-        .etiqueta-header {
-          display: flex; justify-content: space-between; align-items: center;
-          border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-bottom: 6px;
-        }
-        .etiqueta-brand { font-size: 10px; font-weight: 700; color: #6b3a5d; }
-        .etiqueta-nombre { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
-        .etiqueta-detail { font-size: 10px; color: #666; }
-        .etiqueta-precio { font-size: 16px; font-weight: 800; color: #6b3a5d; margin-top: 4px; }
-        .etiqueta-barcode { margin-top: 6px; }
-        .color-dot {
-          width: 10px; height: 10px; border-radius: 50%; display: inline-block;
-          border: 1px solid rgba(0,0,0,0.2);
-        }
-        .color-dot.rojo { background: #e53935; }
-        .color-dot.blanco { background: #f5f5f5; }
-        .color-dot.rosa { background: #ec407a; }
-        .color-dot.amarillo { background: #fdd835; }
-        .color-dot.naranja { background: #ff9800; }
-        .color-dot.lavanda { background: #ab47bc; }
-        .color-dot.bicolor { background: linear-gradient(135deg, #e53935 50%, #fdd835 50%); }
-        .no-print { text-align: center; margin-top: 20px; }
-        .no-print button {
-          padding: 10px 24px; font-size: 14px; border: none; border-radius: 8px;
-          cursor: pointer; font-weight: 600; margin: 0 6px;
-        }
-        .btn-print { background: #6b3a5d; color: white; }
-        .btn-print:hover { background: #4e2a44; }
-        .btn-close-print { background: #eee; color: #333; }
-        .btn-close-print:hover { background: #ddd; }
-        @media print {
-          .no-print { display: none !important; }
-          body { padding: 5mm; }
-        }
-      </style>
+      <title>Etiquetas - ${rosa.nombre} - Productora Floral Vitaly</title>
+      <style>${getLabelPrintStyles()}</style>
     </head>
     <body>
       <div class="etiquetas-grid">${labelsHTML}</div>
@@ -1460,7 +1553,7 @@ function previewEtiquetas() {
     return `
       <div class="etiqueta-card ${sizeClass}">
         <div class="etiqueta-header">
-          <span class="etiqueta-brand">Accy Flor</span>
+          <span class="etiqueta-brand">Productora Floral Vitaly</span>
           <span class="color-dot ${r.color}" style="width:10px;height:10px;"></span>
         </div>
         <div class="etiqueta-body">
@@ -1491,45 +1584,8 @@ function imprimirEtiquetas() {
     <!DOCTYPE html>
     <html>
     <head>
-      <title>Etiquetas - Accy Flor</title>
-      <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; padding: 10mm; }
-        .etiquetas-preview-grid {
-          display: flex; flex-wrap: wrap; gap: 8px;
-          justify-content: flex-start;
-        }
-        .etiqueta-card {
-          border: 1.5px solid #2d1f27;
-          border-radius: 8px;
-          padding: 10px;
-          page-break-inside: avoid;
-        }
-        .etiqueta-small { width: 50mm; min-height: 30mm; }
-        .etiqueta-medium { width: 70mm; min-height: 40mm; }
-        .etiqueta-large { width: 100mm; min-height: 60mm; }
-        .etiqueta-header {
-          display: flex; justify-content: space-between; align-items: center;
-          border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-bottom: 6px;
-        }
-        .etiqueta-brand { font-size: 10px; font-weight: 700; color: #6b3a5d; }
-        .etiqueta-nombre { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
-        .etiqueta-detail { font-size: 10px; color: #666; }
-        .etiqueta-precio { font-size: 16px; font-weight: 800; color: #6b3a5d; margin-top: 4px; }
-        .etiqueta-barcode { margin-top: 6px; }
-        .color-dot {
-          width: 10px; height: 10px; border-radius: 50%; display: inline-block;
-          border: 1px solid rgba(0,0,0,0.2);
-        }
-        .color-dot.rojo { background: #e53935; }
-        .color-dot.blanco { background: #f5f5f5; }
-        .color-dot.rosa { background: #ec407a; }
-        .color-dot.amarillo { background: #fdd835; }
-        .color-dot.naranja { background: #ff9800; }
-        .color-dot.lavanda { background: #ab47bc; }
-        .color-dot.bicolor { background: linear-gradient(135deg, #e53935 50%, #fdd835 50%); }
-        @media print { body { padding: 5mm; } }
-      </style>
+      <title>Etiquetas - Productora Floral Vitaly</title>
+      <style>${getLabelPrintStyles()}</style>
     </head>
     <body>
       <div class="etiquetas-preview-grid">${preview}</div>
@@ -2083,7 +2139,7 @@ function generateFacturaHTML(venta) {
         pointer-events: none;
         width: 200px;
         height: 200px;
-        background: url('img/favicon.png') center center / contain no-repeat;
+        background: url('img/cercada-factura.png') center center / contain no-repeat;
       }
       
       .contenido-factura {
@@ -2317,11 +2373,11 @@ function generateFacturaHTML(venta) {
         <div class="factura-header">
           <div class="empresa-info">
             <div class="empresa-logo">
-              <img src="img/favicon.png" alt="Accy Flor" /> ACCY FLOR
+              <img src="img/cercada-factura.png" alt="Productora Floral Vitaly" /> PRODUCTORA FLORAL VITALY
             </div>
-            <h1>Accy Flor</h1>
+            <h1>Productora Floral Vitaly</h1>
             <p>Distribuidora Premium de Rosas</p>
-            <p>📞 +34 XXX XXX XXX | 📧 info@accyflor.es</p>
+            <p>📞 +34 XXX XXX XXX | 📧 info@productorafloralvitaly.com</p>
             <p style="color:#d32f2f; font-weight:600; margin-top:8px;">Coatepec, Veracruz, México • Moneda: MXN</p>
           </div>
           <div class="factura-num">
@@ -2396,7 +2452,7 @@ function generateFacturaHTML(venta) {
         
         <div class="pie-pagina">
           <p>✅ Gracias por su compra • Esta factura es un documento legal de la transacción realizada</p>
-          <p>🌹 Accy Flor © 2026 • Todos los derechos reservados</p>
+          <p>🌹 Productora Floral Vitaly © 2026 • Todos los derechos reservados</p>
         </div>
       </div>
     </div>
@@ -2549,7 +2605,7 @@ function exportHistorial() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `historial_ventas_AccyFlor_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `historial_ventas_ProductoraFloralVitaly_${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
   showToast('Historial exportado como CSV', 'success');
@@ -2631,7 +2687,7 @@ function exportAllData() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `AccyFlor_backup_${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = `ProductoraFloralVitaly_backup_${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
   URL.revokeObjectURL(url);
   showToast('Datos exportados correctamente', 'success');
