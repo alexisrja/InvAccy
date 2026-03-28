@@ -1106,6 +1106,81 @@ a {
   margin-top: 6px;
 }
 
+/* --- Inventario Freedom Submenu --- */
+.inventario-rosa-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inventario-submenu-toggle {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inventario-submenu-row td {
+  background: #fcf8fb;
+  border-top: none !important;
+}
+
+.inventario-submenu-wrap {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.inventario-submenu-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.inventario-submenu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 6px 10px;
+}
+
+.inventario-submenu-item {
+  font-size: 12px;
+  color: var(--text-dark);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.08);
+  padding: 3px 0;
+}
+
+.inventario-submenu-item i {
+  color: var(--primary);
+  font-size: 14px;
+}
+
+.inventario-submenu-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.inventario-submenu-qty {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary-dark);
+  background: var(--accent-light);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
 /* --- Etiquetas --- */
 .etiquetas-preview-grid {
   display: flex;

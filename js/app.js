@@ -6,32 +6,26 @@
 // ---- Datos de ejemplo ----
 const appData = {
   rosas: [
-    { id: 1, nombre: "Freedom", color: "rojo", variedad: "Híbrida de Té", tallosCm: 60, precioTallo: 2.50, stock: 480, minStock: 100, proveedor: "Finca El Rosal" },
-    { id: 2, nombre: "Vendela", color: "blanco", variedad: "Híbrida de Té", tallosCm: 50, precioTallo: 2.80, stock: 320, minStock: 80, proveedor: "Flores del Valle" },
-    { id: 3, nombre: "Topaz", color: "rosa", variedad: "Híbrida de Té", tallosCm: 60, precioTallo: 3.00, stock: 200, minStock: 80, proveedor: "Finca El Rosal" },
-    { id: 4, nombre: "Brighton", color: "amarillo", variedad: "Spray", tallosCm: 40, precioTallo: 2.20, stock: 150, minStock: 60, proveedor: "AgroFlor" },
-    { id: 5, nombre: "Confidential", color: "rojo", variedad: "Híbrida de Té", tallosCm: 70, precioTallo: 3.50, stock: 90, minStock: 100, proveedor: "Flores del Valle" },
-    { id: 6, nombre: "Ocean Song", color: "lavanda", variedad: "Híbrida de Té", tallosCm: 50, precioTallo: 4.00, stock: 60, minStock: 50, proveedor: "Finca Premium" },
-    { id: 7, nombre: "Circus", color: "bicolor", variedad: "Floribunda", tallosCm: 45, precioTallo: 3.20, stock: 45, minStock: 40, proveedor: "AgroFlor" },
-    { id: 8, nombre: "High & Magic", color: "naranja", variedad: "Híbrida de Té", tallosCm: 60, precioTallo: 3.80, stock: 180, minStock: 70, proveedor: "Finca Premium" },
+    { id: 1, nombre: "Freedom", color: "rojo", variedad: "Híbrida de Té", tallosCm: 60, precioTallo: 2.50, stock: 480, minStock: 100, proveedor: "La Cercada" },
+    { id: 2, nombre: "Vendela", color: "blanco", variedad: "Híbrida de Té", tallosCm: 50, precioTallo: 2.80, stock: 320, minStock: 80, proveedor: "La Cercada" },
+    { id: 3, nombre: "Topaz", color: "rosa", variedad: "Híbrida de Té", tallosCm: 60, precioTallo: 3.00, stock: 200, minStock: 80, proveedor: "La Cercada" },
+    { id: 4, nombre: "Brighton", color: "amarillo", variedad: "Spray", tallosCm: 40, precioTallo: 2.20, stock: 150, minStock: 60, proveedor: "La Cercada" },
+    { id: 5, nombre: "Confidential", color: "rojo", variedad: "Híbrida de Té", tallosCm: 70, precioTallo: 3.50, stock: 90, minStock: 100, proveedor: "La Cercada" },
+    { id: 6, nombre: "Ocean Song", color: "lavanda", variedad: "Híbrida de Té", tallosCm: 50, precioTallo: 4.00, stock: 60, minStock: 50, proveedor: "La Cercada" },
+    { id: 7, nombre: "Circus", color: "bicolor", variedad: "Floribunda", tallosCm: 45, precioTallo: 3.20, stock: 45, minStock: 40, proveedor: "La Cercada" },
+    { id: 8, nombre: "High & Magic", color: "naranja", variedad: "Híbrida de Té", tallosCm: 60, precioTallo: 3.80, stock: 180, minStock: 70, proveedor: "La Cercada" },
   ],
   clientes: [
-    { id: 1, nombre: "Florería La Bella", contacto: "María López", telefono: "555-0101", email: "labella@email.com", tipo: "Mayorista" },
-    { id: 2, nombre: "Eventos Elegance", contacto: "Carlos Ruiz", telefono: "555-0202", email: "elegance@email.com", tipo: "Eventos" },
-    { id: 3, nombre: "Decoraciones Primavera", contacto: "Ana Torres", telefono: "555-0303", email: "primavera@email.com", tipo: "Decoración" },
-    { id: 4, nombre: "Rosas Express", contacto: "Pedro Martínez", telefono: "555-0404", email: "rexpress@email.com", tipo: "Minorista" },
+    { id: 1, nombre: "Florac", contacto: "Florac", telefono: "555-0101", email: "florac@email.com", tipo: "Mayorista" },
   ],
   proveedores: [
-    { id: 1, nombre: "Finca El Rosal", contacto: "Juan García", telefono: "555-1001", ubicacion: "Valle Central", variedades: 12 },
-    { id: 2, nombre: "Flores del Valle", contacto: "Rosa Méndez", telefono: "555-1002", ubicacion: "Tierras Altas", variedades: 8 },
-    { id: 3, nombre: "AgroFlor", contacto: "Miguel Soto", telefono: "555-1003", ubicacion: "Costa Este", variedades: 15 },
-    { id: 4, nombre: "Finca Premium", contacto: "Laura Vega", telefono: "555-1004", ubicacion: "Valle Norte", variedades: 10 },
+    { id: 1, nombre: "La Cercada", contacto: "La Cercada", telefono: "555-1001", ubicacion: "Coatepec", variedades: 8 },
   ],
   ventas: [
-    { id: 1001, fecha: "2026-02-28", cliente: "Florería La Bella", items: [{ rosa: "Freedom", cantidad: 100, precio: 2.50 }, { rosa: "Vendela", cantidad: 50, precio: 2.80 }], total: 390.00, estado: "Completada" },
-    { id: 1002, fecha: "2026-02-27", cliente: "Eventos Elegance", items: [{ rosa: "Topaz", cantidad: 200, precio: 3.00 }, { rosa: "Ocean Song", cantidad: 80, precio: 4.00 }], total: 920.00, estado: "Completada" },
-    { id: 1003, fecha: "2026-02-27", cliente: "Decoraciones Primavera", items: [{ rosa: "Brighton", cantidad: 60, precio: 2.20 }], total: 132.00, estado: "Pendiente" },
-    { id: 1004, fecha: "2026-02-26", cliente: "Rosas Express", items: [{ rosa: "High & Magic", cantidad: 150, precio: 3.80 }, { rosa: "Circus", cantidad: 40, precio: 3.20 }], total: 698.00, estado: "Completada" },
+    { id: 1001, fecha: "2026-02-28", cliente: "Florac", items: [{ rosa: "Freedom", cantidad: 100, precio: 2.50 }, { rosa: "Vendela", cantidad: 50, precio: 2.80 }], total: 390.00, estado: "Completada" },
+    { id: 1002, fecha: "2026-02-27", cliente: "Florac", items: [{ rosa: "Topaz", cantidad: 200, precio: 3.00 }, { rosa: "Ocean Song", cantidad: 80, precio: 4.00 }], total: 920.00, estado: "Completada" },
+    { id: 1003, fecha: "2026-02-27", cliente: "Florac", items: [{ rosa: "Brighton", cantidad: 60, precio: 2.20 }], total: 132.00, estado: "Pendiente" },
+    { id: 1004, fecha: "2026-02-26", cliente: "Florac", items: [{ rosa: "High & Magic", cantidad: 150, precio: 3.80 }, { rosa: "Circus", cantidad: 40, precio: 3.20 }], total: 698.00, estado: "Completada" },
   ],
   nextVentaId: 1005,
   ventasPaquetes: [],
@@ -214,8 +208,7 @@ function renderCatalogo() {
   const tbody = document.getElementById('catalogo-tbody');
   tbody.innerHTML = appData.rosas.map(r => `
     <tr>
-      <td><span class="color-dot ${r.color}"></span>${r.nombre}</td>
-      <td>${capitalizeFirst(r.color)}</td>
+      <td>${r.nombre}</td>
       <td>${r.variedad}</td>
       <td>${r.tallosCm} cm</td>
       <td>$${r.precioTallo.toFixed(2)}</td>
@@ -229,18 +222,180 @@ function renderCatalogo() {
 }
 
 // ---- Renderizar Inventario ----
+const FREEDOM_SUBMENU_ITEMS = [
+  { key: 'exportLarga', label: 'Freedom Cercada Exportacion Larga' },
+  { key: 'exportMediana', label: 'Freedom Cercada Exportacion Mediana' },
+  { key: 'nacionalLarga', label: 'Freedom Cercada Nacional Larga' },
+  { key: 'nacionalMediana', label: 'Freedom Cercada Nacional Mediana' },
+  { key: 'corta', label: 'Freedom Cercada Corta' },
+  { key: 'estandar', label: 'Freedom Cercada Estandar' }
+];
+
+const inventarioExpanded = new Set();
+
+function isFreedomRosa(rosa) {
+  return String(rosa?.nombre || '').trim().toLowerCase() === 'freedom';
+}
+
+function getFreedomCategoriasStock(rosa) {
+  if (!rosa.freedomCategorias || typeof rosa.freedomCategorias !== 'object') {
+    rosa.freedomCategorias = {
+      exportLarga: 0,
+      exportMediana: 0,
+      nacionalLarga: 0,
+      nacionalMediana: 0,
+      corta: 0,
+      estandar: 0
+    };
+  }
+
+  FREEDOM_SUBMENU_ITEMS.forEach(item => {
+    if (typeof rosa.freedomCategorias[item.key] !== 'number' || Number.isNaN(rosa.freedomCategorias[item.key])) {
+      rosa.freedomCategorias[item.key] = 0;
+    }
+  });
+
+  const totalCategorias = FREEDOM_SUBMENU_ITEMS.reduce((sum, item) => sum + (Number(rosa.freedomCategorias[item.key]) || 0), 0);
+  const diferencia = (Number(rosa.stock) || 0) - totalCategorias;
+
+  // Mantiene consistencia entre stock total y suma de categorias en Freedom.
+  if (diferencia !== 0) {
+    rosa.freedomCategorias.estandar = (Number(rosa.freedomCategorias.estandar) || 0) + diferencia;
+  }
+
+  return rosa.freedomCategorias;
+}
+
+function toggleInventarioSubmenu(rosaId) {
+  if (inventarioExpanded.has(rosaId)) {
+    inventarioExpanded.delete(rosaId);
+  } else {
+    inventarioExpanded.add(rosaId);
+  }
+  renderInventario();
+}
+
+function parseLoteVariedadValue(value) {
+  if (!value) return null;
+  const parts = value.split(':');
+  if (parts[0] === 'freedom' && parts.length >= 3) {
+    return {
+      rosaId: parseInt(parts[1]),
+      freedomKey: parts[2],
+      isFreedomCategoria: true
+    };
+  }
+  if (parts[0] === 'rosa' && parts.length >= 2) {
+    return {
+      rosaId: parseInt(parts[1]),
+      freedomKey: '',
+      isFreedomCategoria: false
+    };
+  }
+  return null;
+}
+
+function getLoteVariedadOptions(selectedRosaId) {
+  const options = [];
+  appData.rosas.forEach(r => {
+    if (isFreedomRosa(r)) {
+      FREEDOM_SUBMENU_ITEMS.forEach(item => {
+        options.push({
+          value: `freedom:${r.id}:${item.key}`,
+          label: item.label,
+          rosaId: r.id,
+          freedomKey: item.key
+        });
+      });
+      return;
+    }
+
+    const suffix = r.variedad ? ` · ${r.variedad}` : '';
+    options.push({
+      value: `rosa:${r.id}`,
+      label: `${r.nombre}${suffix}`,
+      rosaId: r.id,
+      freedomKey: ''
+    });
+  });
+
+  let selectedValue = options[0]?.value || '';
+  const freedomRosa = appData.rosas.find(r => r.id === selectedRosaId && isFreedomRosa(r));
+  if (freedomRosa) {
+    selectedValue = `freedom:${freedomRosa.id}:estandar`;
+  } else if (selectedRosaId) {
+    const match = options.find(o => o.rosaId === selectedRosaId && !o.freedomKey);
+    if (match) selectedValue = match.value;
+  }
+
+  return { options, selectedValue };
+}
+
+function updateLoteSelectionFromVariedad() {
+  const variedadSelect = document.getElementById('lote-variedad');
+  if (!variedadSelect) return;
+
+  const parsed = parseLoteVariedadValue(variedadSelect.value);
+  if (!parsed) return;
+
+  const rosa = appData.rosas.find(r => r.id === parsed.rosaId);
+  if (!rosa) return;
+
+  const tipo = document.getElementById('lote-tipo').value;
+  const cantInput = document.getElementById('lote-cantidad');
+  const cantidad = parseInt(cantInput?.value) || 0;
+
+  document.getElementById('lote-rosa-id').value = String(parsed.rosaId);
+  document.getElementById('lote-freedom-key').value = parsed.freedomKey || '';
+  document.getElementById('lote-rosa-nombre').textContent = variedadSelect.options[variedadSelect.selectedIndex]?.text || rosa.nombre;
+
+  const catStock = parsed.isFreedomCategoria ? Number(getFreedomCategoriasStock(rosa)[parsed.freedomKey]) || 0 : Number(rosa.stock) || 0;
+  const stockLabel = parsed.isFreedomCategoria
+    ? `Stock categoria: ${catStock} paquetes · Total ${rosa.nombre}: ${rosa.stock}`
+    : `Stock actual: ${rosa.stock} paquetes · ${rosa.variedad || 'Sin variedad'}`;
+  document.getElementById('lote-rosa-stock').textContent = stockLabel;
+
+  const dot = document.getElementById('lote-rosa-dot');
+  dot.className = 'color-dot';
+  dot.style.background = 'var(--primary)';
+  dot.style.width = '16px';
+  dot.style.height = '16px';
+
+  const provSelect = document.getElementById('lote-proveedor');
+  provSelect.innerHTML = `<option value="">${rosa.proveedor} (actual)</option>` +
+    appData.proveedores.map(p => `<option value="${p.nombre}">${p.nombre}</option>`).join('');
+
+  const nuevoStock = tipo === 'entrada' ? catStock + cantidad : catStock - cantidad;
+  const stockEl = document.getElementById('lote-nuevo-stock');
+  stockEl.textContent = nuevoStock + ' paquetes';
+  if (tipo === 'salida' && cantidad > catStock) {
+    stockEl.style.color = 'var(--danger)';
+    stockEl.textContent = 'Insuficiente';
+  } else {
+    stockEl.style.color = 'var(--primary)';
+  }
+}
+
 function renderInventario() {
   const tbody = document.getElementById('inventario-tbody');
   tbody.innerHTML = appData.rosas.map(r => {
     const estado = r.stock <= r.minStock * 0.5 ? 'Crítico' : r.stock <= r.minStock ? 'Bajo' : r.stock <= r.minStock * 1.5 ? 'Normal' : 'Óptimo';
     const estadoClass = estado === 'Crítico' ? 'low' : estado === 'Bajo' ? 'medium' : 'high';
+    const isFreedom = isFreedomRosa(r);
+    const isExpanded = inventarioExpanded.has(r.id);
+    const freedomCategorias = isFreedom ? getFreedomCategoriasStock(r) : null;
     // Último lote de esta rosa
     const ultimoLote = appData.lotes.find(l => l.rosaId === r.id);
     const loteInfo = ultimoLote ? `<span style="font-size:11px;">L-${String(ultimoLote.id).padStart(4,'0')}</span><br><span style="font-size:10px; color:var(--text-light);">${ultimoLote.fecha} · ${ultimoLote.cantidad} paq.</span>` : '<span style="font-size:11px; color:var(--text-light);">Sin lotes</span>';
-    return `
+
+    const mainRow = `
       <tr>
-        <td><span class="color-dot ${r.color}"></span>${r.nombre}</td>
-        <td>${capitalizeFirst(r.color)}</td>
+        <td>
+          <div class="inventario-rosa-cell">
+            ${isFreedom ? `<button class="btn btn-outline inventario-submenu-toggle" type="button" onclick="toggleInventarioSubmenu(${r.id})" title="Submenu Freedom"><i class="bi ${isExpanded ? 'bi-chevron-down' : 'bi-chevron-right'}"></i></button>` : ''}
+            <strong>${r.nombre}</strong>
+          </div>
+        </td>
         <td><strong>${r.stock}</strong> paquetes</td>
         <td>${r.minStock} paquetes</td>
         <td><span class="stock-badge ${estadoClass}">${estado}</span></td>
@@ -252,6 +407,30 @@ function renderInventario() {
         </td>
       </tr>
     `;
+
+    if (!isFreedom || !isExpanded) {
+      return mainRow;
+    }
+
+    const submenuRow = `
+      <tr class="inventario-submenu-row">
+        <td colspan="7">
+          <div class="inventario-submenu-wrap">
+            <div class="inventario-submenu-title">Submenu Freedom</div>
+            <div class="inventario-submenu-grid">
+              ${FREEDOM_SUBMENU_ITEMS.map(item => `
+                <div class="inventario-submenu-item">
+                  <span class="inventario-submenu-label"><i class="bi bi-dot"></i>${item.label}</span>
+                  <span class="inventario-submenu-qty">${Number(freedomCategorias[item.key]) || 0} paquetes</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </td>
+      </tr>
+    `;
+
+    return mainRow + submenuRow;
   }).join('');
 
   // Actualizar historial de lotes si está visible
@@ -304,8 +483,22 @@ function renderHistorial() {
       <td>${v.items.map(i => `${i.rosa} (${i.cantidad})`).join(', ')}</td>
       <td><strong>$${v.total.toFixed(2)}</strong></td>
       <td><span class="stock-badge ${v.estado === 'Completada' ? 'high' : 'medium'}">${v.estado}</span></td>
+      <td>
+        <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="descargarFacturaVenta(${v.id})">
+          <i class="bi bi-file-earmark-arrow-down"></i> Factura
+        </button>
+      </td>
     </tr>
   `).join('');
+}
+
+function descargarFacturaVenta(ventaId) {
+  const venta = appData.ventas.find(v => v.id === ventaId);
+  if (!venta) {
+    showToast('No se encontro la venta para generar factura', 'error');
+    return;
+  }
+  generarFactura(venta.id, venta.fecha, venta.cliente, venta.items || [], Number(venta.total) || 0);
 }
 
 // ---- Nueva Venta ----
@@ -405,6 +598,18 @@ function guardarVenta() {
 
   const total = items.reduce((s, i) => s + i.cantidad * i.precio, 0);
 
+  const stockInsuficiente = items.find(item => {
+    const rosa = appData.rosas.find(r => r.nombre === item.rosa);
+    return !rosa || item.cantidad > rosa.stock;
+  });
+
+  if (stockInsuficiente) {
+    const rosa = appData.rosas.find(r => r.nombre === stockInsuficiente.rosa);
+    const disponible = rosa ? rosa.stock : 0;
+    showToast(`Stock insuficiente para "${stockInsuficiente.rosa}" (disponible: ${disponible})`, 'error');
+    return;
+  }
+
   // Descontar del stock
   ventaItems.forEach(i => {
     const rosa = appData.rosas.find(r => r.id == i.rosaId);
@@ -438,10 +643,8 @@ function guardarVenta() {
 // ---- Generar Factura ----
 function generarFactura(ventaId, fecha, cliente, items, total) {
   const config = appData.config;
-  const iva = config.iva || 0;
   const subtotal = total;
-  const montoIva = subtotal * (iva / 100);
-  const totalConIva = subtotal + montoIva;
+  const totalFinal = subtotal;
 
   // Convertir favicon a base64 para la ventana de impresión
   const canvas = document.createElement('canvas');
@@ -453,15 +656,15 @@ function generarFactura(ventaId, fecha, cliente, items, total) {
     canvas.getContext('2d').drawImage(img, 0, 0);
     let faviconBase64 = '';
     try { faviconBase64 = canvas.toDataURL('image/png'); } catch (e) { faviconBase64 = ''; }
-    abrirVentanaFactura(ventaId, fecha, cliente, items, subtotal, iva, montoIva, totalConIva, config, faviconBase64);
+    abrirVentanaFactura(ventaId, fecha, cliente, items, subtotal, totalFinal, config, faviconBase64);
   };
   img.onerror = function () {
-    abrirVentanaFactura(ventaId, fecha, cliente, items, subtotal, iva, montoIva, totalConIva, config, '');
+    abrirVentanaFactura(ventaId, fecha, cliente, items, subtotal, totalFinal, config, '');
   };
   img.src = 'img/cercada-factura.png';
 }
 
-function abrirVentanaFactura(ventaId, fecha, cliente, items, subtotal, iva, montoIva, totalConIva, config, faviconBase64) {
+function abrirVentanaFactura(ventaId, fecha, cliente, items, subtotal, totalFinal, config, faviconBase64) {
   const printWin = window.open('', '_blank', 'width=820,height=900');
   printWin.document.write(`<!DOCTYPE html>
 <html lang="es">
@@ -683,13 +886,9 @@ function abrirVentanaFactura(ventaId, fecha, cliente, items, subtotal, iva, mont
           <span>Subtotal</span>
           <span>$${subtotal.toFixed(2)}</span>
         </div>
-        <div class="total-row iva">
-          <span>IVA (${iva}%)</span>
-          <span>$${montoIva.toFixed(2)}</span>
-        </div>
         <div class="total-row grand">
           <span>TOTAL</span>
-          <span>$${totalConIva.toFixed(2)}</span>
+          <span>$${totalFinal.toFixed(2)}</span>
         </div>
       </div>
     </div>
@@ -718,14 +917,13 @@ function openLoteModal(rosaId, tipo) {
   if (!rosa) return;
 
   document.getElementById('lote-rosa-id').value = rosaId;
+  document.getElementById('lote-freedom-key').value = '';
   document.getElementById('lote-tipo').value = tipo;
-  document.getElementById('lote-rosa-nombre').textContent = rosa.nombre;
-  document.getElementById('lote-rosa-stock').textContent = `Stock actual: ${rosa.stock} paquetes · ${capitalizeFirst(rosa.color)} · ${rosa.variedad}`;
 
-  const dot = document.getElementById('lote-rosa-dot');
-  dot.className = 'color-dot ' + rosa.color;
-  dot.style.width = '16px';
-  dot.style.height = '16px';
+  const variedadSelect = document.getElementById('lote-variedad');
+  const optionsData = getLoteVariedadOptions(rosaId);
+  variedadSelect.innerHTML = optionsData.options.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
+  variedadSelect.value = optionsData.selectedValue;
 
   const titleEl = document.getElementById('lote-modal-title');
   if (tipo === 'entrada') {
@@ -753,18 +951,10 @@ function openLoteModal(rosaId, tipo) {
 
   // Evento para actualizar resumen en vivo
   const cantInput = document.getElementById('lote-cantidad');
-  cantInput.oninput = function() {
-    const cant = parseInt(this.value) || 0;
-    const nuevoStock = tipo === 'entrada' ? rosa.stock + cant : rosa.stock - cant;
-    const stockEl = document.getElementById('lote-nuevo-stock');
-    stockEl.textContent = nuevoStock + ' paquetes';
-    if (tipo === 'salida' && cant > rosa.stock) {
-      stockEl.style.color = 'var(--danger)';
-      stockEl.textContent = 'Insuficiente';
-    } else {
-      stockEl.style.color = 'var(--primary)';
-    }
-  };
+  cantInput.oninput = updateLoteSelectionFromVariedad;
+  variedadSelect.onchange = updateLoteSelectionFromVariedad;
+
+  updateLoteSelectionFromVariedad();
 
   showModal('lote-modal');
   setTimeout(() => cantInput.focus(), 100);
@@ -772,6 +962,8 @@ function openLoteModal(rosaId, tipo) {
 
 function guardarLote() {
   const rosaId = parseInt(document.getElementById('lote-rosa-id').value);
+  const freedomKey = document.getElementById('lote-freedom-key').value;
+  const variedadSelect = document.getElementById('lote-variedad');
   const tipo = document.getElementById('lote-tipo').value;
   const cantidad = parseInt(document.getElementById('lote-cantidad').value);
   const proveedor = document.getElementById('lote-proveedor').value;
@@ -787,24 +979,35 @@ function guardarLote() {
   const rosa = appData.rosas.find(r => r.id === rosaId);
   if (!rosa) return;
 
-  if (tipo === 'salida' && cantidad > rosa.stock) {
-    showToast(`Stock insuficiente de "${rosa.nombre}" (disponible: ${rosa.stock})`, 'error');
+  const categoriaStock = freedomKey ? Number(getFreedomCategoriasStock(rosa)[freedomKey]) || 0 : rosa.stock;
+
+  if (tipo === 'salida' && cantidad > categoriaStock) {
+    const nombreVariedad = variedadSelect?.options[variedadSelect.selectedIndex]?.text || rosa.nombre;
+    showToast(`Stock insuficiente de "${nombreVariedad}" (disponible: ${categoriaStock})`, 'error');
     return;
   }
 
   // Aplicar cambio de stock
   if (tipo === 'entrada') {
     rosa.stock += cantidad;
+    if (freedomKey) {
+      rosa.freedomCategorias[freedomKey] = (Number(rosa.freedomCategorias[freedomKey]) || 0) + cantidad;
+    }
   } else {
     rosa.stock -= cantidad;
+    if (freedomKey) {
+      rosa.freedomCategorias[freedomKey] = (Number(rosa.freedomCategorias[freedomKey]) || 0) - cantidad;
+    }
   }
 
   // Registrar lote
+  const nombreVariedad = variedadSelect?.options[variedadSelect.selectedIndex]?.text || rosa.nombre;
   const lote = {
     id: appData.nextLoteId++,
     tipo: tipo,
     rosaId: rosa.id,
-    rosaNombre: rosa.nombre,
+    rosaNombre: nombreVariedad,
+    rosaVariedadKey: freedomKey || '',
     rosaColor: rosa.color,
     cantidad: cantidad,
     proveedor: proveedor || rosa.proveedor,
@@ -894,7 +1097,6 @@ function editRosa(id) {
   if (!rosa) return;
   document.getElementById('rosa-modal-title').textContent = 'Editar Rosa';
   document.getElementById('rosa-nombre').value = rosa.nombre;
-  document.getElementById('rosa-color').value = rosa.color;
   document.getElementById('rosa-variedad').value = rosa.variedad;
   document.getElementById('rosa-tallo').value = rosa.tallosCm;
   document.getElementById('rosa-precio').value = rosa.precioTallo;
@@ -910,7 +1112,6 @@ function saveRosa() {
   const editId = form.dataset.editId;
   const data = {
     nombre: document.getElementById('rosa-nombre').value.trim(),
-    color: document.getElementById('rosa-color').value,
     variedad: document.getElementById('rosa-variedad').value.trim(),
     tallosCm: parseInt(document.getElementById('rosa-tallo').value),
     precioTallo: parseFloat(document.getElementById('rosa-precio').value),
@@ -919,7 +1120,7 @@ function saveRosa() {
     proveedor: document.getElementById('rosa-proveedor').value
   };
 
-  if (!data.nombre || !data.color) {
+  if (!data.nombre) {
     showToast('Completa los campos obligatorios', 'error');
     return;
   }
@@ -1238,7 +1439,9 @@ document.addEventListener('keydown', function(e) {
 
 // ---- Utilities ----
 function capitalizeFirst(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
+  if (!str) return 'Sin categoria';
+  const text = String(str);
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 function formatMXN(value) {
@@ -1466,7 +1669,8 @@ function generateBarcode(code) {
 }
 
 function getRosaCode(rosa) {
-  return 'AF-' + String(rosa.id).padStart(4, '0') + '-' + rosa.color.substring(0, 3).toUpperCase();
+  const colorCode = (rosa?.color ? String(rosa.color) : 'STD').substring(0, 3).toUpperCase();
+  return 'AF-' + String(rosa.id).padStart(4, '0') + '-' + colorCode;
 }
 
 function renderEtiquetasTable() {
@@ -1476,8 +1680,7 @@ function renderEtiquetasTable() {
     return `
       <tr>
         <td><input type="checkbox" class="etiqueta-check" data-id="${r.id}" onchange="previewEtiquetas()" /></td>
-        <td><span class="color-dot ${r.color}"></span><strong>${r.nombre}</strong></td>
-        <td>${capitalizeFirst(r.color)}</td>
+        <td><strong>${r.nombre}</strong></td>
         <td>$${r.precioTallo.toFixed(2)}</td>
         <td><code style="font-size:12px; background:var(--bg-main); padding:2px 8px; border-radius:4px;">${code}</code></td>
         <td><input type="number" class="etiqueta-qty" data-id="${r.id}" min="1" value="1" style="width:60px; padding:4px 8px; border:1px solid var(--border); border-radius:6px; font-size:13px;" onchange="previewEtiquetas()" /></td>
@@ -1514,7 +1717,6 @@ function previewEtiquetas() {
   const countEl = document.getElementById('etiquetas-count');
   const size = document.getElementById('etiqueta-size').value;
   const showNombre = document.getElementById('show-nombre').checked;
-  const showColor = document.getElementById('show-color').checked;
   const showPrecio = document.getElementById('show-precio').checked;
   const showCodigo = document.getElementById('show-codigo').checked;
   const showVariedad = document.getElementById('show-variedad').checked;
@@ -1558,7 +1760,6 @@ function previewEtiquetas() {
         </div>
         <div class="etiqueta-body">
           ${showNombre ? `<div class="etiqueta-nombre">${r.nombre}</div>` : ''}
-          ${showColor ? `<div class="etiqueta-detail">${capitalizeFirst(r.color)}</div>` : ''}
           ${showVariedad ? `<div class="etiqueta-detail">${r.variedad}</div>` : ''}
           ${showTallo ? `<div class="etiqueta-detail">${r.tallosCm} cm</div>` : ''}
           ${showPrecio ? `<div class="etiqueta-precio">$${r.precioTallo.toFixed(2)}</div>` : ''}
@@ -2107,264 +2308,373 @@ function generateFacturaHTML(venta) {
     return '';
   }
 
+  const safe = (value) => String(value ?? '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const clienteNombre = venta.cliente ? safe(venta.cliente) : 'Venta directa';
+  const rosaNombre = safe(venta.rosaNombre);
+  const rosaColor = safe(venta.rosaColor);
+  const cantidad = Number(venta.cantidad) || 0;
+  const precioUnit = Number(venta.precioUnit) || 0;
+  const subtotal = Number(venta.total) || (cantidad * precioUnit);
+  const totalFinal = subtotal;
+  const moneda = appData.config?.moneda || 'MXN';
+  const fechaEmision = safe(venta.fecha || new Date().toISOString().slice(0, 10));
+  const folio = String(venta.id).padStart(6, '0');
+  const notas = venta.notas ? safe(venta.notas) : '';
+  const colorLabel = rosaColor ? capitalizeFirst(rosaColor) : 'Sin color';
+
   return `
     <style>
       @media print {
-        body { margin: 0; padding: 0; }
-        .factura-container { box-shadow: none; border: none; }
+        body { margin: 0; padding: 0; background: #fff; }
+        .factura-container { box-shadow: none; border: none; margin: 0; max-width: none; }
         .no-print { display: none !important; }
       }
+
       .factura-container {
         position: relative;
         width: 100%;
-        max-width: 850px;
+        max-width: 920px;
         margin: 0 auto;
-        padding: 40px;
+        padding: 30px 34px;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        color: #333;
+        color: #2f2630;
         background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-radius: 14px;
+        border: 1px solid #ead9e2;
+        box-shadow: 0 10px 28px rgba(78, 42, 68, 0.12);
       }
-      
+
       /* Marca de agua */
       .factura-container::before {
         content: '';
-        position: fixed;
+        position: absolute;
         top: 50%;
         left: 50%;
-        transform: translate(-50%, -50%) scale(2.5);
-        opacity: 0.08;
+        transform: translate(-50%, -50%);
+        opacity: 0.055;
         z-index: 0;
         pointer-events: none;
-        width: 200px;
-        height: 200px;
+        width: 62%;
+        height: 62%;
         background: url('img/cercada-factura.png') center center / contain no-repeat;
       }
-      
+
       .contenido-factura {
         position: relative;
         z-index: 1;
       }
-      
+
       .factura-header {
         display: flex;
         justify-content: space-between;
-        align-items: flex-start;
-        border-bottom: 3px solid #d32f2f;
-        padding-bottom: 20px;
-        margin-bottom: 25px;
+        align-items: center;
+        border-bottom: 2px solid #e4cfdc;
+        padding-bottom: 18px;
+        margin-bottom: 18px;
+        gap: 16px;
       }
-      
+
       .empresa-logo {
-        font-size: 42px;
-        font-weight: bold;
-        color: #d32f2f;
-        margin-bottom: 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 13px;
+        font-weight: 800;
+        color: #8a2f56;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        margin-bottom: 6px;
       }
 
       .empresa-logo img {
-        width: 72px;
-        height: 72px;
+        width: 66px;
+        height: 66px;
         object-fit: contain;
-        vertical-align: middle;
-        margin-right: 10px;
       }
-      
+
       .empresa-info {
         flex: 1;
       }
-      
+
       .empresa-info h1 {
-        color: #d32f2f;
-        margin: 0 0 5px 0;
-        font-size: 28px;
+        color: #6b2e4f;
+        margin: 0 0 3px 0;
+        font-size: 26px;
         font-weight: 800;
+        line-height: 1.12;
       }
-      
+
       .empresa-info p {
-        margin: 3px 0;
-        color: #666;
-        font-size: 13px;
+        margin: 2px 0;
+        color: #655565;
+        font-size: 12px;
       }
-      
+
+      .factura-badges {
+        display: flex;
+        gap: 8px;
+        margin-top: 9px;
+        flex-wrap: wrap;
+      }
+
+      .factura-badge {
+        background: #f5eaf0;
+        border: 1px solid #e4cfdc;
+        color: #6b2e4f;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 9px;
+      }
+
       .factura-num {
         text-align: right;
+        background: linear-gradient(135deg, #6b2e4f 0%, #8a2f56 100%);
+        color: #fff;
+        border-radius: 12px;
+        padding: 12px 14px;
+        min-width: 220px;
       }
-      
+
       .factura-num h2 {
-        margin: 0 0 10px 0;
-        color: #d32f2f;
-        font-size: 32px;
-        font-weight: bold;
+        margin: 0 0 8px 0;
+        color: #fff;
+        font-size: 26px;
+        letter-spacing: 0.8px;
+        font-weight: 800;
       }
-      
+
       .factura-num p {
-        margin: 3px 0;
-        color: #666;
-        font-size: 13px;
+        margin: 2px 0;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 12px;
       }
-      
+
       .linea-separadora {
         height: 1px;
-        background: #e0e0e0;
-        margin: 20px 0;
+        background: #e9d6e1;
+        margin: 16px 0;
       }
-      
+
+      .meta-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .meta-card {
+        background: #fbf7fa;
+        border: 1px solid #ead9e2;
+        border-radius: 10px;
+        padding: 12px 14px;
+      }
+
+      .meta-card h3 {
+        margin: 0 0 8px 0;
+        color: #6b2e4f;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+      }
+
+      .meta-card p {
+        margin: 3px 0;
+        color: #3f3140;
+        font-size: 13px;
+      }
+
+      .meta-card p strong {
+        color: #6b2e4f;
+      }
+
       .datos-cliente {
-        background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%);
-        padding: 15px 20px;
-        border-radius: 6px;
-        margin-bottom: 20px;
-        border-left: 4px solid #d32f2f;
+        background: linear-gradient(135deg, #fbf7fa 0%, #f7edf3 100%);
+        padding: 14px 16px;
+        border-radius: 10px;
+        margin-bottom: 16px;
+        border-left: 4px solid #8a2f56;
       }
-      
+
       .datos-cliente h3 {
-        margin: 0 0 10px 0;
-        color: #333;
-        font-size: 14px;
+        margin: 0 0 8px 0;
+        color: #4f2c43;
+        font-size: 12px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
       }
-      
+
       .datos-cliente p {
-        margin: 5px 0;
-        color: #555;
+        margin: 4px 0;
+        color: #4f3d50;
         font-size: 14px;
       }
-      
+
       .tabla-items {
         width: 100%;
         border-collapse: collapse;
-        margin: 20px 0;
+        margin: 16px 0;
         background: white;
-        border-radius: 6px;
+        border-radius: 10px;
         overflow: hidden;
+        border: 1px solid #ead9e2;
       }
-      
+
       .tabla-items thead {
-        background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%);
+        background: linear-gradient(135deg, #6b2e4f 0%, #8a2f56 100%);
         color: white;
       }
-      
+
       .tabla-items th {
-        padding: 14px 12px;
+        padding: 12px 12px;
         text-align: left;
         font-weight: 600;
-        font-size: 13px;
+        font-size: 12px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
       }
-      
+
       .tabla-items td {
-        padding: 14px 12px;
-        border-bottom: 1px solid #e0e0e0;
+        padding: 12px 12px;
+        border-bottom: 1px solid #efe3ea;
         font-size: 14px;
       }
-      
+
       .tabla-items tbody tr:last-child td {
         border-bottom: none;
       }
-      
+
       .tabla-items tbody tr:hover {
-        background: #f9f9f9;
+        background: #faf3f7;
       }
-      
+
       .numero { text-align: center; }
       .decimal { text-align: right; }
-      
+
       .resumen {
         display: flex;
         justify-content: flex-end;
-        margin: 25px 0;
+        margin: 18px 0;
       }
-      
+
       .resumen-items {
-        width: 350px;
-        background: #f5f5f5;
-        border-radius: 6px;
-        padding: 20px;
+        width: 360px;
+        background: #fbf7fa;
+        border: 1px solid #ead9e2;
+        border-radius: 10px;
+        padding: 14px 16px;
       }
-      
+
       .resumen-fila {
         display: flex;
         justify-content: space-between;
-        padding: 10px 0;
-        font-size: 14px;
-        color: #666;
-        border-bottom: 1px solid #e0e0e0;
+        padding: 8px 0;
+        font-size: 13px;
+        color: #5d4a5e;
+        border-bottom: 1px solid #ead9e2;
       }
-      
+
       .resumen-fila.total {
         font-weight: 700;
-        font-size: 18px;
-        color: #d32f2f;
-        border-top: 2px solid #d32f2f;
+        font-size: 17px;
+        color: #6b2e4f;
+        border-top: 2px solid #6b2e4f;
         border-bottom: none;
-        padding-top: 12px;
+        padding-top: 10px;
         margin-top: 8px;
         padding-bottom: 0;
       }
-      
+
       .notas {
-        background: #fff3cd;
-        border-left: 4px solid #ffc107;
-        padding: 15px;
-        border-radius: 4px;
-        margin: 20px 0;
+        background: #fff8ef;
+        border-left: 4px solid #ef9a3d;
+        padding: 12px 14px;
+        border-radius: 6px;
+        margin: 16px 0;
       }
-      
+
       .notas p {
         margin: 0;
-        color: #856404;
+        color: #84562b;
         font-size: 13px;
       }
-      
+
       .firma {
         display: flex;
         justify-content: space-around;
-        margin-top: 50px;
-        padding-top: 30px;
-        border-top: 1px solid #e0e0e0;
+        margin-top: 34px;
+        padding-top: 18px;
+        border-top: 1px solid #ead9e2;
       }
-      
+
       .firma-item {
         text-align: center;
         flex: 1;
       }
-      
+
       .firma-linea {
-        width: 150px;
+        width: 170px;
         height: 2px;
-        background: #333;
+        background: #5d4a5e;
         margin: 0 auto 5px;
       }
-      
+
       .firma-item p {
         margin: 0;
-        color: #666;
+        color: #6d5a6e;
         font-size: 12px;
         font-weight: 500;
       }
-      
+
       .pie-pagina {
         text-align: center;
-        color: #999;
+        color: #7a697b;
         font-size: 11px;
-        margin-top: 30px;
-        padding-top: 20px;
-        border-top: 1px solid #e0e0e0;
+        margin-top: 20px;
+        padding-top: 14px;
+        border-top: 1px solid #ead9e2;
       }
-      
+
       .producto-nombre {
         font-weight: 600;
-        color: #d32f2f;
+        color: #6b2e4f;
       }
-      
+
       .codigo-factura {
-        color: #999;
+        color: #867488;
         font-size: 12px;
+      }
+
+      .chip-color {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .dot-color {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #8a2f56;
+        display: inline-block;
+      }
+
+      .dot-rojo { background: #d32f2f; }
+      .dot-blanco { background: #f5f5f5; border: 1px solid #aaa; }
+      .dot-rosa { background: #ec407a; }
+      .dot-amarillo { background: #fdd835; }
+      .dot-naranja { background: #ff9800; }
+      .dot-lavanda { background: #ab47bc; }
+      .dot-bicolor { background: linear-gradient(135deg, #e53935 50%, #fdd835 50%); }
+
+      @media (max-width: 720px) {
+        .factura-container { padding: 20px; }
+        .factura-header { flex-direction: column; align-items: flex-start; }
+        .factura-num { width: 100%; text-align: left; min-width: 0; }
+        .meta-grid { grid-template-columns: 1fr; }
+        .resumen { justify-content: stretch; }
+        .resumen-items { width: 100%; }
       }
     </style>
     
@@ -2378,21 +2688,40 @@ function generateFacturaHTML(venta) {
             <h1>Productora Floral Vitaly</h1>
             <p>Distribuidora Premium de Rosas</p>
             <p>📞 +34 XXX XXX XXX | 📧 info@productorafloralvitaly.com</p>
-            <p style="color:#d32f2f; font-weight:600; margin-top:8px;">Coatepec, Veracruz, México • Moneda: MXN</p>
+            <p style="color:#6b2e4f; font-weight:600; margin-top:6px;">Coatepec, Veracruz, México • Moneda: ${safe(moneda)}</p>
+            <div class="factura-badges">
+              <span class="factura-badge">Venta por Paquete</span>
+              <span class="factura-badge">Estado: Completada</span>
+            </div>
           </div>
           <div class="factura-num">
             <h2>FACTURA</h2>
-            <p class="codigo-factura">Nº <strong>${String(venta.id).padStart(6, '0')}</strong></p>
-            <p class="codigo-factura">Fecha: <strong>${String(venta.fecha)}</strong></p>
+            <p class="codigo-factura">N° <strong>${folio}</strong></p>
+            <p class="codigo-factura">Fecha: <strong>${fechaEmision}</strong></p>
           </div>
         </div>
         
         <div class="linea-separadora"></div>
+
+        <div class="meta-grid">
+          <div class="meta-card">
+            <h3>Datos de Venta</h3>
+            <p><strong>ID Interno:</strong> ${safe(venta.id)}</p>
+            <p><strong>Cantidad de paquetes:</strong> ${cantidad}</p>
+            <p><strong>Precio unitario:</strong> ${formatMXN(precioUnit)}</p>
+          </div>
+          <div class="meta-card">
+            <h3>Producto</h3>
+            <p><strong>Rosa:</strong> ${rosaNombre}</p>
+            <p><strong>Tipo:</strong> Paquete</p>
+            <p class="chip-color"><strong>Color:</strong> <span class="dot-color dot-${rosaColor.toLowerCase()}"></span> ${colorLabel}</p>
+          </div>
+        </div>
         
         <div class="datos-cliente">
-          <h3>🧑‍💼 Datos del Cliente</h3>
+          <h3>Datos del Cliente</h3>
           ${venta.cliente ? `
-            <p><strong>Nombre:</strong> ${String(venta.cliente).replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+            <p><strong>Nombre:</strong> ${clienteNombre}</p>
           ` : `
             <p style="font-style: italic; color: #999;">Venta directa (sin cliente registrado)</p>
           `}
@@ -2410,12 +2739,12 @@ function generateFacturaHTML(venta) {
           <tbody>
             <tr>
               <td>
-                <div class="producto-nombre">${String(venta.rosaNombre).replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
-                <div class="codigo-factura">Rosas ${String(venta.rosaColor).replace(/</g, '&lt;').replace(/>/g, '&gt;')} • Paquetes</div>
+                <div class="producto-nombre">${rosaNombre}</div>
+                <div class="codigo-factura">Rosas ${colorLabel} • Paquetes</div>
               </td>
-              <td class="numero"><strong>${venta.cantidad}</strong></td>
-                <td class="decimal">${formatMXN(venta.precioUnit)}</td>
-                <td class="decimal"><strong>${formatMXN(venta.total)}</strong></td>
+              <td class="numero"><strong>${cantidad}</strong></td>
+              <td class="decimal">${formatMXN(precioUnit)}</td>
+              <td class="decimal"><strong>${formatMXN(subtotal)}</strong></td>
             </tr>
           </tbody>
         </table>
@@ -2424,18 +2753,18 @@ function generateFacturaHTML(venta) {
           <div class="resumen-items">
             <div class="resumen-fila">
               <span>Subtotal:</span>
-                <span>${formatMXN(venta.total)}</span>
+              <span>${formatMXN(subtotal)}</span>
             </div>
             <div class="resumen-fila total">
               <span>TOTAL A PAGAR:</span>
-                <span>${formatMXN(venta.total)}</span>
+              <span>${formatMXN(totalFinal)}</span>
             </div>
           </div>
         </div>
         
-        ${venta.notas ? `
+        ${notas ? `
           <div class="notas">
-            <p><strong>📝 Notas:</strong> ${String(venta.notas).replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+            <p><strong>Notas:</strong> ${notas}</p>
           </div>
         ` : ''}
         
@@ -2451,8 +2780,8 @@ function generateFacturaHTML(venta) {
         </div>
         
         <div class="pie-pagina">
-          <p>✅ Gracias por su compra • Esta factura es un documento legal de la transacción realizada</p>
-          <p>🌹 Productora Floral Vitaly © 2026 • Todos los derechos reservados</p>
+          <p>Gracias por su compra • Documento emitido por Productora Floral Vitaly</p>
+          <p>Productora Floral Vitaly © 2026 • Todos los derechos reservados</p>
         </div>
       </div>
     </div>
