@@ -1452,36 +1452,192 @@ function formatMXN(value) {
 const ZPL_DPI = 203;
 const MM_PER_INCH = 25.4;
 const ZPL_DOTS_PER_MM = ZPL_DPI / MM_PER_INCH;
+const CM_TO_MM = 10;
+const ETIQUETA_PREVIEW_PX_PER_CM = 56;
 
-// ZPL size requested: 200 (ancho) x 400 (largo) dots.
-const LABEL_PRINT_WIDTH_DOTS = 200;
-const LABEL_PRINT_HEIGHT_DOTS = 400;
+const ETIQUETA_SIZE_DEFAULT = 'zd421';
+const ETIQUETA_SIZE_PRESETS = {
+  zd421: {
+    model: 'Zebra ZD421',
+    widthCm: 5,
+    heightCm: 2.5
+  },
+  'zd421-compact': {
+    model: 'Compacta',
+    widthCm: 4,
+    heightCm: 2
+  },
+  'zd421-mini': {
+    model: 'Mini',
+    widthCm: 3,
+    heightCm: 1.5
+  }
+};
 
-const LABEL_PRINT_WIDTH_MM = LABEL_PRINT_WIDTH_DOTS / ZPL_DOTS_PER_MM;
-const LABEL_PRINT_HEIGHT_MM = LABEL_PRINT_HEIGHT_DOTS / ZPL_DOTS_PER_MM;
+const ETIQUETA_CUSTOM_LIMITS = {
+  minWidthCm: 2,
+  maxWidthCm: 10,
+  minHeightCm: 1,
+  maxHeightCm: 8
+};
 
-function getLabelPrintStyles() {
+function clampNumber(value, min, max, fallback) {
+  const num = Number(value);
+  if (Number.isNaN(num)) return fallback;
+  return Math.min(Math.max(num, min), max);
+}
+
+function formatCm(value) {
+  const num = Number(value);
+  if (Number.isNaN(num)) return '0';
+  if (Math.abs(num - Math.round(num)) < 0.001) return String(Math.round(num));
+  return num.toFixed(1);
+}
+
+function getEtiquetaSizePreset(sizeKey) {
+  return ETIQUETA_SIZE_PRESETS[sizeKey] || ETIQUETA_SIZE_PRESETS[ETIQUETA_SIZE_DEFAULT];
+}
+
+function getSelectedEtiquetaSize() {
+  const sizeSelect = document.getElementById('etiqueta-size');
+  return sizeSelect?.value || ETIQUETA_SIZE_DEFAULT;
+}
+
+function getEtiquetaDimensions(sizeKey = null) {
+  const activeKey = sizeKey || getSelectedEtiquetaSize();
+  if (activeKey === 'custom') {
+    const widthInput = document.getElementById('etiqueta-custom-width');
+    const heightInput = document.getElementById('etiqueta-custom-height');
+    const defaultPreset = getEtiquetaSizePreset(ETIQUETA_SIZE_DEFAULT);
+
+    const widthCm = clampNumber(
+      widthInput?.value,
+      ETIQUETA_CUSTOM_LIMITS.minWidthCm,
+      ETIQUETA_CUSTOM_LIMITS.maxWidthCm,
+      defaultPreset.widthCm
+    );
+    const heightCm = clampNumber(
+      heightInput?.value,
+      ETIQUETA_CUSTOM_LIMITS.minHeightCm,
+      ETIQUETA_CUSTOM_LIMITS.maxHeightCm,
+      defaultPreset.heightCm
+    );
+
+    return {
+      sizeKey: activeKey,
+      model: 'Personalizado',
+      widthCm,
+      heightCm
+    };
+  }
+
+  const preset = getEtiquetaSizePreset(activeKey);
+  return {
+    sizeKey: activeKey,
+    model: preset.model,
+    widthCm: preset.widthCm,
+    heightCm: preset.heightCm
+  };
+}
+
+function getEtiquetaDots(sizeKey = null) {
+  const { widthCm, heightCm } = getEtiquetaDimensions(sizeKey);
+  const widthDots = Math.max(100, Math.round((widthCm * CM_TO_MM) * ZPL_DOTS_PER_MM));
+  const heightDots = Math.max(80, Math.round((heightCm * CM_TO_MM) * ZPL_DOTS_PER_MM));
+  return { widthDots, heightDots };
+}
+
+function getEtiquetaPreviewStyle(sizeKey = null) {
+  const activeKey = sizeKey || getSelectedEtiquetaSize();
+  if (activeKey !== 'custom') return '';
+
+  const { widthCm, heightCm } = getEtiquetaDimensions(sizeKey);
+  const widthPx = Math.round(widthCm * ETIQUETA_PREVIEW_PX_PER_CM);
+  const heightPx = Math.round(heightCm * ETIQUETA_PREVIEW_PX_PER_CM);
+  return `width:${widthPx}px; min-height:${heightPx}px;`;
+}
+
+function getEtiquetaVisualClass(sizeKey = null) {
+  const { sizeKey: activeKey, heightCm } = getEtiquetaDimensions(sizeKey);
+  if (activeKey !== 'custom') return `etiqueta-${activeKey}`;
+  if (heightCm <= 1.6) return 'etiqueta-zd421-mini';
+  if (heightCm <= 2.2) return 'etiqueta-zd421-compact';
+  return 'etiqueta-zd421';
+}
+
+function updateEtiquetaSizeInfo() {
+  const infoEl = document.getElementById('etiqueta-size-info');
+  if (!infoEl) return;
+
+  const dims = getEtiquetaDimensions();
+  const { widthDots, heightDots } = getEtiquetaDots(dims.sizeKey);
+  infoEl.textContent = `Perfil listo para impresión térmica: ${widthDots} × ${heightDots} dots aprox. (203 dpi) · ${formatCm(dims.widthCm)} × ${formatCm(dims.heightCm)} cm.`;
+}
+
+function updateEtiquetaCustomControls() {
+  const customWrap = document.getElementById('etiqueta-custom-size-wrap');
+  if (!customWrap) return;
+  customWrap.style.display = getSelectedEtiquetaSize() === 'custom' ? 'block' : 'none';
+}
+
+function handleEtiquetaSizeChange() {
+  updateEtiquetaCustomControls();
+  updateEtiquetaSizeInfo();
+  previewEtiquetas();
+}
+
+function handleEtiquetaCustomSizeInput() {
+  if (getSelectedEtiquetaSize() !== 'custom') return;
+  updateEtiquetaSizeInfo();
+  previewEtiquetas();
+}
+
+function getLabelPrintStyles(sizeKey = ETIQUETA_SIZE_DEFAULT) {
+  const dims = getEtiquetaDimensions(sizeKey);
+  const widthMm = dims.widthCm * CM_TO_MM;
+  const heightMm = dims.heightCm * CM_TO_MM;
+  const isCompactLabel = heightMm <= 30;
+  const brandFont = isCompactLabel ? '6px' : '7px';
+  const nameFont = isCompactLabel ? '8px' : '8.5px';
+  const detailFont = isCompactLabel ? '6px' : '6.8px';
+  const priceFont = isCompactLabel ? '8px' : '9px';
+  const bodyGap = isCompactLabel ? '0.1mm' : '0.25mm';
+  const barcodeHeight = isCompactLabel ? '6.5mm' : '8mm';
+
   return `
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; padding: 2mm; color: #000; }
-    @page { margin: 0; }
+    html, body {
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      color: #000;
+      background: #fff;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    @page {
+      size: ${widthMm}mm ${heightMm}mm;
+      margin: 0;
+    }
     .etiquetas-grid,
     .etiquetas-preview-grid {
       display: flex;
       flex-wrap: wrap;
       gap: 1.5mm;
       align-content: flex-start;
+      margin: 0;
+      padding: 0;
     }
     .etiqueta-card {
-      border: 0.6mm solid #000;
-      border-radius: 1mm;
-      padding: 1.2mm 1.5mm;
-      width: ${LABEL_PRINT_WIDTH_MM}mm;
-      height: ${LABEL_PRINT_HEIGHT_MM}mm;
-      min-height: ${LABEL_PRINT_HEIGHT_MM}mm;
-      max-height: ${LABEL_PRINT_HEIGHT_MM}mm;
-      page-break-inside: avoid;
-      break-inside: avoid;
+      border: 0.45mm solid #000;
+      border-radius: 0;
+      padding: 1.2mm 1.3mm;
+      width: ${widthMm}mm !important;
+      height: ${heightMm}mm !important;
+      min-height: ${heightMm}mm !important;
+      max-height: ${heightMm}mm !important;
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -1490,11 +1646,14 @@ function getLabelPrintStyles() {
     .etiqueta-card::before { display: none; }
     .etiqueta-small,
     .etiqueta-medium,
-    .etiqueta-large {
-      width: ${LABEL_PRINT_WIDTH_MM}mm;
-      height: ${LABEL_PRINT_HEIGHT_MM}mm;
-      min-height: ${LABEL_PRINT_HEIGHT_MM}mm;
-      max-height: ${LABEL_PRINT_HEIGHT_MM}mm;
+    .etiqueta-large,
+    .etiqueta-zd421,
+    .etiqueta-zd421-compact,
+    .etiqueta-zd421-mini {
+      width: ${widthMm}mm !important;
+      height: ${heightMm}mm !important;
+      min-height: ${heightMm}mm !important;
+      max-height: ${heightMm}mm !important;
     }
     .etiqueta-header {
       display: flex;
@@ -1505,7 +1664,7 @@ function getLabelPrintStyles() {
       margin-bottom: 0.6mm;
     }
     .etiqueta-brand {
-      font-size: 7px;
+      font-size: ${brandFont};
       font-weight: 700;
       color: #000;
       text-transform: uppercase;
@@ -1514,13 +1673,13 @@ function getLabelPrintStyles() {
     .etiqueta-body {
       display: flex;
       flex-direction: column;
-      gap: 0.25mm;
+      gap: ${bodyGap};
       flex: 1;
       min-height: 0;
       overflow: hidden;
     }
     .etiqueta-nombre {
-      font-size: 8.5px;
+      font-size: ${nameFont};
       font-weight: 700;
       color: #000;
       line-height: 1.15;
@@ -1529,7 +1688,7 @@ function getLabelPrintStyles() {
       text-overflow: ellipsis;
     }
     .etiqueta-detail {
-      font-size: 6.8px;
+      font-size: ${detailFont};
       line-height: 1.15;
       color: #000;
       white-space: nowrap;
@@ -1537,7 +1696,7 @@ function getLabelPrintStyles() {
       text-overflow: ellipsis;
     }
     .etiqueta-precio {
-      font-size: 9px;
+      font-size: ${priceFont};
       font-weight: 800;
       color: #000;
       line-height: 1.15;
@@ -1550,7 +1709,7 @@ function getLabelPrintStyles() {
     }
     .etiqueta-barcode svg {
       width: 100%;
-      height: 9mm !important;
+      height: ${barcodeHeight} !important;
       display: block;
     }
     .etiqueta-barcode text { fill: #000 !important; }
@@ -1569,7 +1728,10 @@ function getLabelPrintStyles() {
     .color-dot.naranja { background: #ff9800; }
     .color-dot.lavanda { background: #ab47bc; }
     .color-dot.bicolor { background: linear-gradient(135deg, #e53935 50%, #fdd835 50%); }
-    .no-print { text-align: center; margin-top: 20px; }
+    .no-print {
+      text-align: center;
+      margin-top: 4mm;
+    }
     .no-print button {
       padding: 10px 24px;
       font-size: 14px;
@@ -1584,8 +1746,31 @@ function getLabelPrintStyles() {
     .btn-close-print { background: #eee; color: #333; }
     .btn-close-print:hover { background: #ddd; }
     @media print {
+      html, body {
+        width: ${widthMm}mm;
+        min-width: ${widthMm}mm;
+        max-width: ${widthMm}mm;
+        height: ${heightMm}mm;
+        min-height: ${heightMm}mm;
+        max-height: ${heightMm}mm;
+        overflow: hidden;
+      }
+      .etiquetas-grid,
+      .etiquetas-preview-grid {
+        width: ${widthMm}mm;
+        display: block;
+        margin: 0;
+        padding: 0;
+      }
+      .etiqueta-card {
+        page-break-after: always;
+        break-after: page;
+      }
+      .etiqueta-card:last-child {
+        page-break-after: auto;
+        break-after: auto;
+      }
       .no-print { display: none !important; }
-      body { padding: 1mm; }
     }
   `;
 }
@@ -1610,6 +1795,7 @@ function confirmPrintLabels() {
 }
 
 function printQuickLabels(rosa, quantity) {
+  const selectedSize = getSelectedEtiquetaSize();
   const code = getRosaCode(rosa);
   let labelsHTML = '';
   for (let i = 0; i < quantity; i++) {
@@ -1636,7 +1822,7 @@ function printQuickLabels(rosa, quantity) {
     <html>
     <head>
       <title>Etiquetas - ${rosa.nombre} - Productora Floral Vitaly</title>
-      <style>${getLabelPrintStyles()}</style>
+      <style>${getLabelPrintStyles(selectedSize)}</style>
     </head>
     <body>
       <div class="etiquetas-grid">${labelsHTML}</div>
@@ -1671,6 +1857,239 @@ function generateBarcode(code) {
 function getRosaCode(rosa) {
   const colorCode = (rosa?.color ? String(rosa.color) : 'STD').substring(0, 3).toUpperCase();
   return 'AF-' + String(rosa.id).padStart(4, '0') + '-' + colorCode;
+}
+
+function getEtiquetaDisplayOptions() {
+  return {
+    showNombre: document.getElementById('show-nombre')?.checked ?? true,
+    showPrecio: document.getElementById('show-precio')?.checked ?? true,
+    showCodigo: document.getElementById('show-codigo')?.checked ?? true,
+    showVariedad: document.getElementById('show-variedad')?.checked ?? false,
+    showTallo: document.getElementById('show-tallo')?.checked ?? false
+  };
+}
+
+function getSelectedEtiquetasFromUI() {
+  const selected = [];
+  document.querySelectorAll('.etiqueta-check:checked').forEach(cb => {
+    const id = parseInt(cb.dataset.id);
+    const rosa = appData.rosas.find(r => r.id === id);
+    const qtyInput = document.querySelector(`.etiqueta-qty[data-id="${id}"]`);
+    const qty = Math.max(parseInt(qtyInput?.value) || 1, 1);
+
+    if (!rosa) return;
+    for (let i = 0; i < qty; i++) {
+      selected.push(rosa);
+    }
+  });
+  return selected;
+}
+
+function sanitizeZplText(value, maxLen = 40) {
+  const raw = String(value || '');
+  const noAccents = raw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const safe = noAccents.replace(/[\^~\\]/g, ' ').replace(/\s+/g, ' ').trim();
+  return safe.substring(0, maxLen);
+}
+
+function buildEtiquetaZPL(rosa, options) {
+  const code = sanitizeZplText(getRosaCode(rosa), 30);
+  const nombre = sanitizeZplText(rosa.nombre, 22);
+  const color = sanitizeZplText(capitalizeFirst(rosa.color), 20);
+  const variedad = sanitizeZplText(rosa.variedad || '', 28);
+  const tallo = `${Number(rosa.tallosCm) || 0} cm`;
+  const precio = `$${(Number(rosa.precioTallo) || 0).toFixed(2)}`;
+  const sizeKey = getSelectedEtiquetaSize();
+  const { widthDots, heightDots } = getEtiquetaDots(sizeKey);
+  const isCompactLabel = heightDots <= 220;
+
+  const brandFont = isCompactLabel ? '14,14' : '16,16';
+  const nameFont = isCompactLabel ? '24,22' : '30,28';
+  const detailFont = isCompactLabel ? '15,15' : '18,18';
+  const priceFont = isCompactLabel ? '24,22' : '30,28';
+  const barcodeHeight = isCompactLabel ? 42 : 55;
+  const barcodeReserve = isCompactLabel ? 72 : 120;
+
+  const lines = [
+    '^XA',
+    '^CI28',
+    `^PW${widthDots}`,
+    `^LL${heightDots}`,
+    '^LH0,0',
+    `^FO8,8^A0N,${brandFont}^FDPF Vitaly^FS`
+  ];
+
+  let y = isCompactLabel ? 26 : 32;
+
+  if (options.showNombre) {
+    lines.push(`^FO8,${y}^A0N,${nameFont}^FD${nombre}^FS`);
+    y += isCompactLabel ? 26 : 34;
+  }
+
+  const extraDetails = [];
+  if (options.showVariedad && variedad) extraDetails.push(variedad);
+  if (options.showTallo) extraDetails.push(tallo);
+  const extraDetailsToPrint = isCompactLabel ? extraDetails.slice(0, 1) : extraDetails;
+
+  if (options.showPrecio) {
+    lines.push(`^FO8,${y}^A0N,${priceFont}^FD${precio}^FS`);
+    y += isCompactLabel ? 24 : 36;
+  }
+
+  lines.push(`^FO8,${y}^A0N,${detailFont}^FD${color}^FS`);
+  y += isCompactLabel ? 18 : 22;
+
+  extraDetailsToPrint.forEach(detail => {
+    lines.push(`^FO8,${y}^A0N,${detailFont}^FD${detail}^FS`);
+    y += isCompactLabel ? 17 : 22;
+  });
+
+  if (options.showCodigo) {
+    const barcodeY = Math.max(8, Math.min(y + (isCompactLabel ? 2 : 4), heightDots - barcodeReserve));
+    lines.push(`^BY2,2,${barcodeHeight}`);
+    lines.push(`^FO12,${barcodeY}^BCN,${barcodeHeight},Y,N,N^FD${code}^FS`);
+  }
+
+  lines.push('^PQ1,0,1,N');
+  lines.push('^XZ');
+
+  return lines.join('\n');
+}
+
+function getZPLExportFileName() {
+  const now = new Date();
+  const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
+  return `etiquetas_zebra_zd421_${stamp}.zpl`;
+}
+
+function buildSelectedEtiquetasZPLPayload() {
+  const selected = getSelectedEtiquetasFromUI();
+  if (selected.length === 0) return null;
+
+  const options = getEtiquetaDisplayOptions();
+  const zpl = selected.map(rosa => buildEtiquetaZPL(rosa, options)).join('\n\n');
+
+  return {
+    selectedCount: selected.length,
+    zpl,
+    fileName: getZPLExportFileName()
+  };
+}
+
+function triggerZPLDownload(zplContent, fileName) {
+  const blob = new Blob([zplContent], { type: 'text/plain;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', fileName);
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function fallbackCopyZPL(textArea) {
+  if (!textArea) return false;
+  textArea.focus();
+  textArea.select();
+  try {
+    return document.execCommand('copy');
+  } catch (error) {
+    return false;
+  }
+}
+
+function previewEtiquetasZPL() {
+  const payload = buildSelectedEtiquetasZPLPayload();
+  if (!payload) {
+    showToast('Selecciona al menos una rosa para generar vista ZPL', 'error');
+    return;
+  }
+
+  const meta = document.getElementById('zpl-preview-meta');
+  const textArea = document.getElementById('zpl-preview-text');
+  if (!textArea) {
+    showToast('No se encontró el contenedor de vista ZPL', 'error');
+    return;
+  }
+
+  textArea.value = payload.zpl;
+  textArea.dataset.fileName = payload.fileName;
+
+  if (meta) {
+    const dims = getEtiquetaDimensions();
+    meta.textContent = `${payload.selectedCount} etiqueta${payload.selectedCount !== 1 ? 's' : ''} lista${payload.selectedCount !== 1 ? 's' : ''} para ${formatCm(dims.widthCm)} x ${formatCm(dims.heightCm)} cm.`;
+  }
+
+  showModal('zpl-preview-modal');
+}
+
+function copyZPLPreview() {
+  const textArea = document.getElementById('zpl-preview-text');
+  const zpl = textArea?.value || '';
+  if (!zpl.trim()) {
+    showToast('No hay contenido ZPL para copiar', 'error');
+    return;
+  }
+
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(zpl)
+      .then(() => showToast('ZPL copiado al portapapeles', 'success'))
+      .catch(() => {
+        const copied = fallbackCopyZPL(textArea);
+        showToast(copied ? 'ZPL copiado al portapapeles' : 'No se pudo copiar el ZPL', copied ? 'success' : 'error');
+      });
+    return;
+  }
+
+  const copied = fallbackCopyZPL(textArea);
+  showToast(copied ? 'ZPL copiado al portapapeles' : 'No se pudo copiar el ZPL', copied ? 'success' : 'error');
+}
+
+function downloadZPLPreview() {
+  const textArea = document.getElementById('zpl-preview-text');
+  const zpl = textArea?.value || '';
+  if (!zpl.trim()) {
+    showToast('No hay contenido ZPL para descargar', 'error');
+    return;
+  }
+
+  const fileName = textArea?.dataset?.fileName || getZPLExportFileName();
+  triggerZPLDownload(zpl, fileName);
+  showToast(`Archivo ZPL descargado (${fileName})`, 'success');
+}
+
+function exportEtiquetasZPL() {
+  const payload = buildSelectedEtiquetasZPLPayload();
+  if (!payload) {
+    showToast('Selecciona al menos una rosa para exportar ZPL', 'error');
+    return;
+  }
+
+  triggerZPLDownload(payload.zpl, payload.fileName);
+
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(payload.zpl).catch(() => {});
+  }
+
+  showToast(`ZPL generado para ${payload.selectedCount} etiqueta(s) (${payload.fileName})`, 'success');
+}
+
+function imprimirZPLDirecto() {
+  const payload = buildSelectedEtiquetasZPLPayload();
+  if (!payload) {
+    showToast('Selecciona al menos una rosa para imprimir en ZPL', 'error');
+    return;
+  }
+
+  triggerZPLDownload(payload.zpl, payload.fileName);
+
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(payload.zpl).catch(() => {});
+  }
+
+  showToast(`ZPL directo listo (${payload.fileName}). Envíalo a la Zebra ZD421`, 'success');
 }
 
 function renderEtiquetasTable() {
@@ -1715,25 +2134,9 @@ function toggleEtiquetaConfig() {
 function previewEtiquetas() {
   const preview = document.getElementById('etiquetas-preview');
   const countEl = document.getElementById('etiquetas-count');
-  const size = document.getElementById('etiqueta-size').value;
-  const showNombre = document.getElementById('show-nombre').checked;
-  const showPrecio = document.getElementById('show-precio').checked;
-  const showCodigo = document.getElementById('show-codigo').checked;
-  const showVariedad = document.getElementById('show-variedad').checked;
-  const showTallo = document.getElementById('show-tallo').checked;
-
-  const selected = [];
-  document.querySelectorAll('.etiqueta-check:checked').forEach(cb => {
-    const id = parseInt(cb.dataset.id);
-    const rosa = appData.rosas.find(r => r.id === id);
-    const qtyInput = document.querySelector(`.etiqueta-qty[data-id="${id}"]`);
-    const qty = parseInt(qtyInput?.value) || 1;
-    if (rosa) {
-      for (let i = 0; i < qty; i++) {
-        selected.push(rosa);
-      }
-    }
-  });
+  const size = getSelectedEtiquetaSize();
+  const { showNombre, showPrecio, showCodigo, showVariedad, showTallo } = getEtiquetaDisplayOptions();
+  const selected = getSelectedEtiquetasFromUI();
 
   if (selected.length === 0) {
     preview.innerHTML = `
@@ -1751,9 +2154,10 @@ function previewEtiquetas() {
 
   preview.innerHTML = selected.map(r => {
     const code = getRosaCode(r);
-    const sizeClass = `etiqueta-${size}`;
+    const sizeClass = getEtiquetaVisualClass(size);
+    const sizeStyle = getEtiquetaPreviewStyle(size);
     return `
-      <div class="etiqueta-card ${sizeClass}">
+      <div class="etiqueta-card ${sizeClass}" style="${sizeStyle}">
         <div class="etiqueta-header">
           <span class="etiqueta-brand">Productora Floral Vitaly</span>
           <span class="color-dot ${r.color}" style="width:10px;height:10px;"></span>
@@ -1771,22 +2175,27 @@ function previewEtiquetas() {
 }
 
 function imprimirEtiquetas() {
-  const selected = document.querySelectorAll('.etiqueta-check:checked');
+  const selected = getSelectedEtiquetasFromUI();
   if (selected.length === 0) {
     showToast('Selecciona al menos una rosa para imprimir', 'error');
     return;
   }
 
+  const size = getSelectedEtiquetaSize();
+
   // Generar ventana de impresión
   const preview = document.getElementById('etiquetas-preview').innerHTML;
-  const size = document.getElementById('etiqueta-size').value;
   const printWindow = window.open('', '_blank', 'width=800,height=600');
+  if (!printWindow) {
+    showToast('El navegador bloqueo la ventana de impresion. Permite popups e intenta de nuevo.', 'error');
+    return;
+  }
   printWindow.document.write(`
     <!DOCTYPE html>
     <html>
     <head>
       <title>Etiquetas - Productora Floral Vitaly</title>
-      <style>${getLabelPrintStyles()}</style>
+      <style>${getLabelPrintStyles(size)}</style>
     </head>
     <body>
       <div class="etiquetas-preview-grid">${preview}</div>
@@ -3187,6 +3596,7 @@ function renderDashboard() {
 
 // ---- Init ----
 document.addEventListener('DOMContentLoaded', function () {
+  handleEtiquetaSizeChange();
   navigateTo('inicio');
   refreshNotifDot();
   loadConfig();

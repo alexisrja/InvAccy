@@ -656,9 +656,12 @@
         <div class="page-content">
           <div class="section-header">
             <h2>Generador de Etiquetas</h2>
-            <div style="display:flex; gap:8px;">
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
               <button class="btn btn-outline" onclick="selectAllEtiquetas()"><i class="bi bi-check2-all"></i> Seleccionar Todas</button>
               <button class="btn btn-primary" onclick="imprimirEtiquetas()"><i class="bi bi-printer"></i> Imprimir Seleccionadas</button>
+              <button class="btn btn-primary" style="background:var(--success);" onclick="imprimirZPLDirecto()"><i class="bi bi-lightning-charge-fill"></i> Imprimir ZPL Directo</button>
+              <button class="btn btn-outline" onclick="exportEtiquetasZPL()"><i class="bi bi-file-earmark-code"></i> Exportar ZPL</button>
+              <button class="btn btn-outline" onclick="previewEtiquetasZPL()"><i class="bi bi-eye"></i> Vista ZPL</button>
             </div>
           </div>
 
@@ -672,11 +675,27 @@
               <div class="form-row">
                 <div class="form-group">
                   <label>Tamaño de Etiqueta</label>
-                  <select id="etiqueta-size" onchange="previewEtiquetas()">
-                    <option value="small">Pequeña (5 × 3 cm)</option>
-                    <option value="medium" selected>Mediana (7 × 4 cm)</option>
-                    <option value="large">Grande (10 × 6 cm)</option>
+                  <select id="etiqueta-size" onchange="handleEtiquetaSizeChange()">
+                    <option value="zd421" selected>Zebra ZD421 (ancho 5 × largo 2.5 cm)</option>
+                    <option value="zd421-compact">Compacta (ancho 4 × largo 2 cm)</option>
+                    <option value="zd421-mini">Mini (ancho 3 × largo 1.5 cm)</option>
+                    <option value="custom">Personalizado</option>
                   </select>
+                  <div id="etiqueta-custom-size-wrap" style="display:none; margin-top:10px;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                      <label style="font-weight:400; font-size:12px; color:var(--text-medium);">
+                        Ancho (cm)
+                        <input type="number" id="etiqueta-custom-width" min="2" max="10" step="0.1" value="5" oninput="handleEtiquetaCustomSizeInput()" />
+                      </label>
+                      <label style="font-weight:400; font-size:12px; color:var(--text-medium);">
+                        Largo (cm)
+                        <input type="number" id="etiqueta-custom-height" min="1" max="8" step="0.1" value="2.5" oninput="handleEtiquetaCustomSizeInput()" />
+                      </label>
+                    </div>
+                  </div>
+                  <small id="etiqueta-size-info" style="display:block; margin-top:6px; color:var(--text-light); font-size:12px;">Perfil listo para impresión térmica: 400 × 200 dots aprox. (203 dpi).</small>
+                  <small style="display:block; margin-top:4px; color:var(--text-light); font-size:12px;">Si imprimes desde el navegador: usa Escala 100% y desactiva "Ajustar al ancho de página".</small>
+                  <small style="display:block; margin-top:4px; color:var(--primary-dark); font-size:12px; font-weight:600;">"Imprimir Seleccionadas" usa el navegador. Si tu cola Zebra trabaja en ZPL, usa "Imprimir ZPL Directo".</small>
                 </div>
                 <div class="form-group">
                   <label>Mostrar en Etiqueta</label>
@@ -920,6 +939,24 @@
       <div class="modal-footer" style="justify-content:center; gap:12px;">
         <button class="btn btn-outline" onclick="closeModal('print-labels-modal')"><i class="bi bi-x"></i> No, gracias</button>
         <button class="btn btn-primary" onclick="confirmPrintLabels()"><i class="bi bi-printer"></i> Imprimir</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="zpl-preview-modal">
+    <div class="modal" style="max-width:880px; max-height:90vh; overflow-y:auto;">
+      <div class="modal-header">
+        <h3><i class="bi bi-file-earmark-code" style="color:var(--primary);"></i> Vista Previa ZPL</h3>
+        <button class="modal-close" onclick="closeModal('zpl-preview-modal')"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-body">
+        <p id="zpl-preview-meta" class="zpl-preview-meta">Selecciona productos para generar ZPL.</p>
+        <textarea id="zpl-preview-text" class="zpl-preview-text" readonly spellcheck="false"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('zpl-preview-modal')">Cerrar</button>
+        <button class="btn btn-outline" onclick="copyZPLPreview()"><i class="bi bi-clipboard"></i> Copiar ZPL</button>
+        <button class="btn btn-primary" onclick="downloadZPLPreview()"><i class="bi bi-download"></i> Descargar .zpl</button>
       </div>
     </div>
   </div>

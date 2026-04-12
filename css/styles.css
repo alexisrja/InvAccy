@@ -1229,6 +1229,21 @@ a {
   min-height: 220px;
 }
 
+.etiqueta-zd421 {
+  width: 280px;
+  min-height: 140px;
+}
+
+.etiqueta-zd421-compact {
+  width: 224px;
+  min-height: 112px;
+}
+
+.etiqueta-zd421-mini {
+  width: 180px;
+  min-height: 90px;
+}
+
 .etiqueta-header {
   display: flex;
   justify-content: space-between;
@@ -1277,6 +1292,46 @@ a {
 .etiqueta-small .etiqueta-nombre { font-size: 12px; }
 .etiqueta-small .etiqueta-precio { font-size: 14px; }
 .etiqueta-small .etiqueta-detail { font-size: 10px; }
+
+.etiqueta-zd421 .etiqueta-nombre { font-size: 12px; }
+.etiqueta-zd421 .etiqueta-precio { font-size: 14px; }
+.etiqueta-zd421 .etiqueta-detail { font-size: 9px; }
+.etiqueta-zd421 .etiqueta-barcode svg { height: 28px !important; }
+
+.etiqueta-zd421-compact .etiqueta-nombre { font-size: 11px; }
+.etiqueta-zd421-compact .etiqueta-precio { font-size: 13px; }
+.etiqueta-zd421-compact .etiqueta-detail { font-size: 8px; }
+.etiqueta-zd421-compact .etiqueta-barcode svg { height: 24px !important; }
+
+.etiqueta-zd421-mini .etiqueta-nombre { font-size: 10px; }
+.etiqueta-zd421-mini .etiqueta-precio { font-size: 12px; }
+.etiqueta-zd421-mini .etiqueta-detail { font-size: 8px; }
+.etiqueta-zd421-mini .etiqueta-barcode svg { height: 20px !important; }
+
+.zpl-preview-meta {
+  font-size: 13px;
+  color: var(--text-medium);
+  margin-bottom: 10px;
+}
+
+.zpl-preview-text {
+  width: 100%;
+  min-height: 420px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  background: #fdfcff;
+  color: var(--text-dark);
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  resize: vertical;
+}
+
+.zpl-preview-text:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(107, 58, 93, 0.1);
+}
 
 .etiqueta-barcode {
   margin-top: 8px;
